@@ -13,6 +13,7 @@ export const generateStandaloneHTML = (data: GeneratedContent, type: GameType): 
     .btn:hover { background: #0284c7; transform: translateY(-2px); box-shadow: 0 6px 10px -1px rgba(14, 165, 233, 0.3); }
     .btn:active { transform: translateY(0); }
     .btn-secondary { background: #94a3b8; box-shadow: none; }
+    .btn:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; transform: none; }
     .hidden { display: none !important; }
     .score-board { font-size: 1.25rem; font-weight: 800; color: #f59e0b; background: #fffbeb; padding: 0.5rem 1.5rem; border-radius: 2rem; display: inline-block; margin-bottom: 1.5rem; }
     .feedback { margin-top: 1.5rem; font-weight: bold; min-height: 2rem; font-size: 1.2rem; }
@@ -112,114 +113,94 @@ export const generateStandaloneHTML = (data: GeneratedContent, type: GameType): 
   `;
 
   // --- QUIZ ENGINE ---
-  // --- QUIZ ENGINE (Đã nâng cấp: Có nút Back & Lưu lịch sử) ---
   const quizScript = `
     let currentQIndex = 0;
-    // Biến lưu lịch sử trả lời: { 0: 'A', 1: 'B'... }
-    const userHistory = {}; 
+    let userAnswers = {}; // Store answers { [index]: { selected: '...', isCorrect: bool } }
     
     function renderGame() {
       const container = document.getElementById('game-area');
       
-      if (currentQIndex >= gameData.questions.length) {
-        showComplete();
-        return;
-      }
-      
       const q = gameData.questions[currentQIndex];
-      // Kiểm tra xem câu này đã làm chưa trong lịch sử
-      const history = userHistory[currentQIndex];
-      const isAnswered = history !== undefined;
+      const hasAnswered = userAnswers[currentQIndex] !== undefined;
+      const isLastQuestion = currentQIndex === gameData.questions.length - 1;
 
       let html = \`
         <div class="fade-in">
-          <h3 style="color:#64748b">Câu \${currentQIndex + 1}/\${gameData.questions.length}</h3>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem">
+             <button class="btn btn-secondary" onclick="prevQ()" \${currentQIndex === 0 ? 'disabled' : ''}>⬅ Quay lại</button>
+             <h3 style="color:#64748b; margin:0">Câu \${currentQIndex + 1}/\${gameData.questions.length}</h3>
+             <button class="btn \${hasAnswered ? '' : 'btn-secondary'}" onclick="\${isLastQuestion ? 'finishGame()' : 'nextQ()'}" \${!hasAnswered ? 'disabled' : ''}>
+                \${isLastQuestion ? 'Hoàn thành 🎉' : 'Tiếp theo ➡'}
+             </button>
+          </div>
+
           <p style="font-size: 1.4rem; font-weight: bold; margin: 1rem 0 2rem;">\${q.question}</p>
           <div class="options-grid">
       \`;
       
       q.options.forEach(opt => {
-        // Xử lý logic để tô màu lại các câu đã trả lời khi bấm Back
-        let extraClass = '';
-        if (isAnswered) {
-            if (opt === q.correctAnswer) extraClass = 'selected-correct';
-            else if (opt === history.selectedOption) extraClass = 'selected-wrong';
+        let btnClass = "option-btn";
+        if (hasAnswered) {
+             if (opt === q.correctAnswer) btnClass += " selected-correct";
+             else if (opt === userAnswers[currentQIndex].selected) btnClass += " selected-wrong";
         }
-
-        // Nếu đã trả lời rồi thì không cho click nữa (bỏ onclick)
-        const clickAction = isAnswered ? '' : \`onclick="checkAnswer(this, '\${opt.replace(/'/g, "\\'")}', '\${q.correctAnswer.replace(/'/g, "\\'")}')"\`;
         
-        html += \`<div class="option-btn \${extraClass}" \${clickAction}>\${opt}</div>\`;
+        const safeOpt = opt.replace(/'/g, "\\'");
+        const safeCorrect = q.correctAnswer.replace(/'/g, "\\'");
+        const clickAttr = hasAnswered ? '' : \`onclick="checkAnswer(this, '\${safeOpt}', '\${safeCorrect}')"\`;
+        
+        html += \`<div class="\${btnClass}" \${clickAttr}>\${opt}</div>\`;
       });
+      html += \`</div><div id="feedback" class="feedback">\`;
+      
+      if (hasAnswered) {
+         if (userAnswers[currentQIndex].isCorrect) {
+             html += "<span class='correct'>Chính xác! 👏</span>";
+         } else {
+             html += "<span class='wrong'>Sai rồi! Đáp án: " + q.correctAnswer + "</span>";
+         }
+      }
 
-      // Khu vực nút điều hướng (Back / Next)
-      // Nút Back: Chỉ hiện khi không phải câu đầu tiên (index > 0)
-      const backBtnStyle = currentQIndex > 0 ? '' : 'display:none';
-      // Nút Next: Hiện khi đã trả lời xong
-      const nextBtnClass = isAnswered ? '' : 'hidden';
-
-      html += \`
-          </div>
-          <div id="feedback" class="feedback">
-             \${isAnswered ? (history.isCorrect ? "<span class='correct'>Chính xác! 👏</span>" : "<span class='wrong'>Đáp án đúng: " + q.correctAnswer + "</span>") : ""}
-          </div>
-          
-          <div style="margin-top: 25px; display: flex; justify-content: center; gap: 15px;">
-            <button id="back-btn" class="btn btn-secondary" style="\${backBtnStyle}" onclick="prevQuestion()">&larr; Quay lại</button>
-            <button id="next-btn" class="btn \${nextBtnClass}" onclick="nextQuestion()">Tiếp theo &rarr;</button>
-          </div>
-        </div>
-      \`;
+      html += \`</div></div>\`;
       
       container.innerHTML = html;
       document.getElementById('score').innerText = currentScore;
     }
 
     function checkAnswer(el, userAns, correctAns) {
-      if (userHistory[currentQIndex]) return; // Chặn nếu đã trả lời
+      if (userAnswers[currentQIndex]) return;
 
-      const nextBtn = document.getElementById('next-btn');
       const isCorrect = userAns === correctAns;
-
-      // Lưu vào lịch sử
-      userHistory[currentQIndex] = {
-          selectedOption: userAns,
-          isCorrect: isCorrect
-      };
-
+      userAnswers[currentQIndex] = { selected: userAns, isCorrect: isCorrect };
+      
       if (isCorrect) {
-        el.classList.add('selected-correct');
-        document.getElementById('feedback').innerHTML = "<span class='correct'>Chính xác! 👏</span>";
         currentScore += 10;
         playSound('correct');
       } else {
-        el.classList.add('selected-wrong');
-        document.getElementById('feedback').innerHTML = "<span class='wrong'>Sai rồi! Đáp án đúng: " + correctAns + "</span>";
         playSound('wrong');
-        // Hiện đáp án đúng
-        document.querySelectorAll('.option-btn').forEach(btn => {
-            if(btn.innerText === correctAns) btn.classList.add('selected-correct');
-        });
       }
-      
-      document.getElementById('score').innerText = currentScore;
-      nextBtn.classList.remove('hidden'); 
+      renderGame();
     }
 
-    function nextQuestion() {
-       currentQIndex++;
-       renderGame();
-       playSound('click');
+    function prevQ() {
+        if (currentQIndex > 0) {
+            currentQIndex--;
+            renderGame();
+        }
     }
 
-    function prevQuestion() {
-       if (currentQIndex > 0) {
-           currentQIndex--;
-           renderGame(); // Vẽ lại màn hình, logic ở trên sẽ tự tô màu lại đáp án cũ
-           playSound('click');
-       }
+    function nextQ() {
+        if (currentQIndex < gameData.questions.length - 1) {
+            currentQIndex++;
+            renderGame();
+        }
+    }
+
+    function finishGame() {
+        showComplete();
     }
   `;
+
   // --- MATCHING ENGINE ---
   const matchingScript = `
     let selectedLeft = null;
