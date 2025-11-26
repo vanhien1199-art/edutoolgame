@@ -1,4 +1,4 @@
-export type GameType = 'quiz' | 'matching' | 'wheel' | 'sequencing' | 'simulation';
+export type GameType = 'quiz' | 'matching' | 'wheel' | 'sequencing' | 'simulation' | 'fast_quiz' | 'comparison' | 'number_grid' | 'keyword_guess' | 'mystery_box';
 
 export interface GameConfig {
   bookSeries: string;
@@ -25,8 +25,8 @@ export interface SimulationZone {
 export interface QuestionItem {
   id: string;
   question: string;
-  content?: string; // For sequencing items
-  // For Quiz
+  content?: string; // For sequencing items or general content
+  // For Quiz / Fast Quiz
   options?: string[];
   correctAnswer?: string;
   explanation?: string;
@@ -40,7 +40,23 @@ export interface QuestionItem {
   simulationConfig?: {
     zones: SimulationZone[];
     items: SimulationItem[];
-    backgroundTheme?: string; // Description for UI hint
+    backgroundTheme?: string;
+  };
+  // For Comparison (Common/Diff)
+  comparisonConfig?: {
+    groupA: string; // Label A (e.g. Tế bào thực vật)
+    groupB: string; // Label B (e.g. Tế bào động vật)
+    items: { id: string; content: string; belongsTo: 'A' | 'B' | 'Both' }[];
+  };
+  // For Keyword Guessing
+  keywordConfig?: {
+    keywords: string[]; // List of 3-4 keywords
+    finalAnswer: string; // The hidden lesson topic
+  };
+  // For Mystery Box
+  mysteryConfig?: {
+    hints: string[]; // 3-4 hints
+    itemContent: string; // What is inside the box
   };
 }
 
