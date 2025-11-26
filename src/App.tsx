@@ -61,7 +61,7 @@ const App: React.FC = () => {
         <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 mb-2">
           Game Creator AI
         </h1>
-        <p className="text-slate-600 text-lg">Soạn bài giảng GDPT 2018 thành trò chơi tương tác</p>
+        <p className="text-slate-600 text-lg">Tạo trò chơi tương tác</p>
       </header>
 
       {step === 'setup' && (
