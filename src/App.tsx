@@ -135,7 +135,7 @@ const App: React.FC = () => {
                                                    <div key={i.id} className="text-sm p-1 border border-slate-200 mb-1 rounded flex justify-between">
                                                       <span>{i.content}</span>
                                                       <span className="text-xs text-slate-400">
-                                                        -> {q.simulationConfig 
+                                                        &rarr {q.simulationConfig 
                                                             ? q.simulationConfig.zones.find(z => z.id === i.zoneId)?.label 
                                                             : (i as any).belongsTo}
                                                       </span>
