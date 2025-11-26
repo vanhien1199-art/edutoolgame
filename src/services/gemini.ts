@@ -1,4 +1,5 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+const ai = new GoogleGenerativeAI(apiKey);
 import { GameConfig, GeneratedContent } from "../types";
 
 // SỬA: Dùng import.meta.env.VITE_GEMINI_API_KEY
