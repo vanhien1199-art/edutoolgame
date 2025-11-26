@@ -16,7 +16,7 @@ export const generateGameContent = async (config: GameConfig): Promise<Generated
   const model = genAI.getGenerativeModel({ model: modelId });
 
   const prompt = `
-  Bạn là một chuyên gia giáo dục Việt Nam, am hiểu chương trình GDPT 2018 và SGK ${config.bookSeries}.
+  Bạn là một chuyên gia giáo dục Việt Nam, am hiểu chương trình GDPT 2018 và nội dung SGK ${config.bookSeries} tại nguồn trang: https://hanhtrangso.nxbgd.vn/.
   Nhiệm vụ: Tạo nội dung trò chơi giáo dục cho bài học:
   - Môn: ${config.subject}
   - Lớp: ${config.grade}
