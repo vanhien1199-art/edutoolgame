@@ -3,7 +3,7 @@ import { GameConfig, GeneratedContent, QuestionItem } from './types';
 import { generateGameContent } from './services/gemini';
 import { generateStandaloneHTML } from './utils/exportUtils';
 import GameForm from './components/GameForm';
-import { Download, Edit3, ArrowLeft, BrainCircuit } from 'lucide-react';
+import { Download, Edit3, ArrowLeft, BrainCircuit, Target, Package, Grid3X3, Zap } from 'lucide-react';
 
 const App: React.FC = () => {
   const [step, setStep] = useState<'setup' | 'review'>('setup');
@@ -100,7 +100,7 @@ const App: React.FC = () => {
                 <div className="space-y-6">
                     <h3 className="text-lg font-bold flex items-center gap-2 text-blue-600">
                         <Edit3 size={20} />
-                        Xem trước nội dung ({content.questions.length} mục)
+                        Xem trước & Chỉnh sửa
                     </h3>
                     
                     {content.questions.map((q, idx) => (
@@ -114,52 +114,96 @@ const App: React.FC = () => {
                                         className="w-full p-2 border border-slate-300 rounded focus:border-blue-500 outline-none font-medium"
                                         value={q.question}
                                         onChange={(e) => handleUpdateQuestion(idx, 'question', e.target.value)}
-                                        placeholder="Nội dung câu hỏi"
+                                        placeholder="Nội dung câu hỏi / Tiêu đề"
                                     />
                                     
-                                    {/* Simulation View */}
-                                    {config.gameType === 'simulation' && q.simulationConfig && (
+                                    {/* SIMULATION & COMPARISON VIEW */}
+                                    {(config.gameType === 'simulation' || config.gameType === 'comparison') && (
                                        <div className="bg-white p-4 rounded border border-blue-100">
-                                          <div className="flex items-center gap-2 mb-2 text-blue-600 font-bold">
-                                             <BrainCircuit size={16} /> Cấu hình mô phỏng: {q.simulationConfig.backgroundTheme}
-                                          </div>
+                                          {q.simulationConfig && (
+                                            <p className="mb-2 text-sm font-bold text-blue-600 flex items-center gap-1"><BrainCircuit size={16}/> Mô phỏng: {q.simulationConfig.backgroundTheme}</p>
+                                          )}
+                                          {q.comparisonConfig && (
+                                            <div className="mb-2 text-sm font-bold text-blue-600 flex items-center gap-1">
+                                              <span>Nhóm A: {q.comparisonConfig.groupA}</span> | <span>Nhóm B: {q.comparisonConfig.groupB}</span>
+                                            </div>
+                                          )}
                                           <div className="grid grid-cols-2 gap-4">
                                              <div>
-                                               <p className="text-xs font-bold uppercase text-slate-400">Khu vực (Zones)</p>
-                                               {q.simulationConfig.zones.map(z => (
-                                                  <div key={z.id} className="text-sm p-1 bg-slate-100 mb-1 rounded">{z.label}</div>
-                                               ))}
-                                             </div>
-                                             <div>
-                                                <p className="text-xs font-bold uppercase text-slate-400">Vật phẩm (Items)</p>
-                                                {q.simulationConfig.items.map(i => (
+                                                <p className="text-xs font-bold uppercase text-slate-400">Vật phẩm / Nội dung</p>
+                                                {(q.simulationConfig?.items || q.comparisonConfig?.items)?.map(i => (
                                                    <div key={i.id} className="text-sm p-1 border border-slate-200 mb-1 rounded flex justify-between">
                                                       <span>{i.content}</span>
-                                                      <span className="text-xs text-slate-400">&rarr; {q.simulationConfig?.zones.find(z => z.id === i.zoneId)?.label}</span>
+                                                      <span className="text-xs text-slate-400">
+                                                        -> {q.simulationConfig 
+                                                            ? q.simulationConfig.zones.find(z => z.id === i.zoneId)?.label 
+                                                            : (i as any).belongsTo}
+                                                      </span>
                                                    </div>
                                                 ))}
                                              </div>
                                           </div>
-                                          <p className="text-xs text-slate-500 mt-2 italic">*Chỉnh sửa chi tiết các vật phẩm trong file code nếu cần</p>
                                        </div>
                                     )}
 
-                                    {/* Sequencing View */}
+                                    {/* NUMBER GRID VIEW */}
+                                    {config.gameType === 'number_grid' && q.options && (
+                                       <div className="bg-white p-3 rounded border border-blue-100">
+                                          <p className="text-xs font-bold uppercase text-slate-400 mb-1 flex items-center gap-1"><Grid3X3 size={14}/> Ô số {idx+1}</p>
+                                          <div className="grid grid-cols-2 gap-2">
+                                             {q.options.map((opt, optIdx) => (
+                                                <div key={optIdx} className={`text-sm p-1 border rounded ${opt === q.correctAnswer ? 'bg-green-50 border-green-200' : ''}`}>
+                                                   {opt}
+                                                </div>
+                                             ))}
+                                          </div>
+                                       </div>
+                                    )}
+
+                                    {/* KEYWORD GUESS VIEW */}
+                                    {config.gameType === 'keyword_guess' && q.keywordConfig && (
+                                        <div className="bg-white p-3 rounded border border-blue-100">
+                                            <div className="flex items-center gap-2 mb-2 text-red-600 font-bold">
+                                               <Target size={16} /> Đáp án cuối cùng: {q.keywordConfig.finalAnswer}
+                                            </div>
+                                            <div className="space-y-1">
+                                                {q.keywordConfig.keywords.map((k, kIdx) => (
+                                                    <div key={kIdx} className="p-2 bg-slate-100 rounded text-sm">Từ khóa {kIdx+1}: {k}</div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* MYSTERY BOX VIEW */}
+                                    {config.gameType === 'mystery_box' && q.mysteryConfig && (
+                                        <div className="bg-white p-3 rounded border border-blue-100">
+                                             <div className="flex items-center gap-2 mb-2 text-purple-600 font-bold">
+                                               <Package size={16} /> Trong hộp là: {q.mysteryConfig.itemContent}
+                                            </div>
+                                            <div className="space-y-1">
+                                                {q.mysteryConfig.hints.map((h, hIdx) => (
+                                                    <div key={hIdx} className="p-2 bg-slate-100 rounded text-sm text-slate-600">{h}</div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* SEQUENCING VIEW */}
                                     {config.gameType === 'sequencing' && (
                                        <div className="flex items-center gap-2">
-                                          <span className="text-sm font-bold text-slate-500">Thứ tự đúng: {q.sequenceOrder}</span>
+                                          <span className="text-sm font-bold text-slate-500">Thứ tự: {q.sequenceOrder}</span>
                                           <input 
                                              className="flex-1 p-2 border border-slate-200 rounded text-sm"
                                              value={q.content || ''} 
                                              onChange={(e) => handleUpdateQuestion(idx, 'content', e.target.value)}
                                           />
-                                          <span className="text-xs text-slate-400">(Nội dung bước)</span>
                                        </div>
                                     )}
 
-                                    {/* Quiz Specific UI */}
-                                    {config.gameType === 'quiz' && q.options && (
+                                    {/* QUIZ / FAST QUIZ VIEW */}
+                                    {(config.gameType === 'quiz' || config.gameType === 'fast_quiz') && q.options && (
                                         <div className="grid grid-cols-2 gap-3">
+                                            {config.gameType === 'fast_quiz' && <div className="col-span-2 text-xs font-bold text-yellow-600 flex items-center gap-1"><Zap size={12}/> Câu hỏi nhanh</div>}
                                             {q.options.map((opt, optIdx) => (
                                                 <div key={optIdx} className="flex items-center gap-2">
                                                     <div className={`w-4 h-4 rounded-full border ${opt === q.correctAnswer ? 'bg-green-500 border-green-500' : 'border-slate-300'}`}></div>
@@ -178,7 +222,7 @@ const App: React.FC = () => {
                                         </div>
                                     )}
 
-                                    {/* Matching Specific UI */}
+                                    {/* MATCHING VIEW */}
                                     {config.gameType === 'matching' && q.matchPair && (
                                         <div className="flex items-center gap-4 bg-white p-3 rounded border border-slate-200">
                                             <input
@@ -195,7 +239,7 @@ const App: React.FC = () => {
                                         </div>
                                     )}
 
-                                    {/* Wheel Specific UI */}
+                                    {/* WHEEL VIEW */}
                                     {config.gameType === 'wheel' && (
                                         <div className="space-y-2">
                                             <div className="flex gap-2 items-center">
