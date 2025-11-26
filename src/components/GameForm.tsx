@@ -48,7 +48,7 @@ const GameForm: React.FC<GameFormProps> = ({ config, onChange, onSubmit, isLoadi
         <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
           <BookOpen className="w-8 h-8 text-blue-600" />
         </div>
-        <h2 className="text-2xl font-bold text-slate-800">Thiết Lập Bài Giảng AI</h2>
+        <h2 className="text-2xl font-bold text-slate-800">Công cụ</h2>
         <p className="text-slate-500">Tự động tìm kiếm nội dung SGK & tạo trò chơi</p>
       </div>
 
