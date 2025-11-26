@@ -4,7 +4,7 @@ export const generateStandaloneHTML = (data: GeneratedContent, type: GameType): 
   const jsonData = JSON.stringify(data).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
   const commonStyles = `
-    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap');
     body { font-family: 'Nunito', sans-serif; background: #f0f9ff; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
     .container { width: 100%; max-width: 900px; background: white; padding: 2rem; border-radius: 1.5rem; box-shadow: 0 10px 40px rgba(0,0,0,0.08); text-align: center; }
     h1 { color: #0284c7; margin: 0 0 0.5rem 0; font-size: 2rem; }
@@ -57,7 +57,7 @@ export const generateStandaloneHTML = (data: GeneratedContent, type: GameType): 
     .sequence-item:hover { border-color: #94a3b8; }
     .seq-index { background: #e0f2fe; color: #0284c7; width: 30px; height: 30px; display: flex; items-center; justify-content: center; border-radius: 50%; font-weight: bold; font-size: 0.9rem; }
 
-    /* Simulation Styles (Warm-up) */
+    /* Simulation & Comparison Styles */
     .sim-area { display: flex; gap: 2rem; margin-top: 2rem; flex-direction: column; }
     .sim-items { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; min-height: 80px; padding: 1rem; background: #f8fafc; border-radius: 1rem; border: 2px dashed #cbd5e1; }
     .sim-item { background: white; padding: 0.75rem 1.5rem; border-radius: 2rem; border: 2px solid #38bdf8; color: #0284c7; font-weight: bold; cursor: grab; user-select: none; touch-action: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.1s; }
@@ -66,6 +66,29 @@ export const generateStandaloneHTML = (data: GeneratedContent, type: GameType): 
     .sim-zone { flex: 1; min-width: 200px; min-height: 200px; border-radius: 1rem; border: 2px solid transparent; display: flex; flex-direction: column; align-items: center; padding: 1rem; transition: background 0.3s; position: relative; }
     .zone-label { font-weight: bold; margin-bottom: 1rem; font-size: 1.2rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.8); border-radius: 0.5rem; }
     .sim-item-dropped { margin: 5px; display: inline-block; transform: scale(0.9); }
+
+    /* Number Grid Styles */
+    .number-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; max-width: 400px; margin: 0 auto; }
+    .grid-cell { aspect-ratio: 1; background: #3b82f6; color: white; font-size: 2rem; font-weight: bold; border-radius: 1rem; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s, background 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); }
+    .grid-cell:hover { transform: scale(1.05); background: #2563eb; }
+    .grid-cell.opened { background: #94a3b8; cursor: default; transform: none; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+    .grid-cell.correct { background: #22c55e; }
+
+    /* Keyword Guess Styles */
+    .keyword-board { display: flex; flex-direction: column; gap: 1rem; max-width: 500px; margin: 0 auto; }
+    .keyword-card { background: #e0f2fe; padding: 1.5rem; border-radius: 1rem; font-size: 1.5rem; font-weight: bold; color: #0369a1; transform: scale(0.9); opacity: 0; transition: all 0.5s; display: none; }
+    .keyword-card.revealed { transform: scale(1); opacity: 1; display: block; }
+
+    /* Mystery Box Styles */
+    .mystery-box-container { text-align: center; }
+    .mystery-box { width: 150px; height: 150px; margin: 2rem auto; font-size: 4rem; background: linear-gradient(135deg, #a855f7, #6366f1); color: white; border-radius: 20px; display: flex; items-center; justify-content: center; cursor: pointer; transition: transform 0.3s; box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.5); }
+    .mystery-box:hover { transform: translateY(-5px); }
+    .mystery-box.shaking { animation: shake 0.5s; }
+    @keyframes shake { 0% { transform: rotate(0deg); } 25% { transform: rotate(5deg); } 75% { transform: rotate(-5deg); } 100% { transform: rotate(0deg); } }
+    .hint-list { text-align: left; max-width: 500px; margin: 0 auto; }
+    .hint-item { background: white; padding: 1rem; margin-bottom: 0.5rem; border-left: 4px solid #a855f7; display: none; }
+    .hint-item.revealed { display: block; animation: slideIn 0.3s; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
   `;
 
   const commonScripts = `
@@ -93,7 +116,7 @@ export const generateStandaloneHTML = (data: GeneratedContent, type: GameType): 
       document.getElementById('game-area').innerHTML = \`
         <div class='fade-in' style='margin-top:3rem'>
           <h2 style='font-size:2rem; color:#f59e0b'>🎉 Xuất sắc!</h2>
-          <p style='font-size:1.2rem'>Bạn đã hoàn thành bài học.</p>
+          <p style='font-size:1.2rem'>Bạn đã hoàn thành hoạt động này.</p>
           <button class='btn' onclick='location.reload()'>Chơi lại</button>
         </div>
       \`;
@@ -112,14 +135,13 @@ export const generateStandaloneHTML = (data: GeneratedContent, type: GameType): 
     }
   `;
 
-  // --- QUIZ ENGINE ---
+  // --- QUIZ & FAST QUIZ ENGINE (FIXED) ---
   const quizScript = `
     let currentQIndex = 0;
-    let userAnswers = {}; // Store answers { [index]: { selected: '...', isCorrect: bool } }
+    let userAnswers = {};
     
     function renderGame() {
       const container = document.getElementById('game-area');
-      
       const q = gameData.questions[currentQIndex];
       const hasAnswered = userAnswers[currentQIndex] !== undefined;
       const isLastQuestion = currentQIndex === gameData.questions.length - 1;
@@ -127,10 +149,10 @@ export const generateStandaloneHTML = (data: GeneratedContent, type: GameType): 
       let html = \`
         <div class="fade-in">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem">
-             <button class="btn btn-secondary" onclick="prevQ()" \${currentQIndex === 0 ? 'disabled' : ''}>⬅ Quay lại</button>
+             <button class="btn btn-secondary" onclick="prevQ()" \${currentQIndex === 0 ? 'disabled' : ''}>⬅</button>
              <h3 style="color:#64748b; margin:0">Câu \${currentQIndex + 1}/\${gameData.questions.length}</h3>
              <button class="btn \${hasAnswered ? '' : 'btn-secondary'}" onclick="\${isLastQuestion ? 'finishGame()' : 'nextQ()'}" \${!hasAnswered ? 'disabled' : ''}>
-                \${isLastQuestion ? 'Hoàn thành 🎉' : 'Tiếp theo ➡'}
+                \${isLastQuestion ? 'Xong 🎉' : '➡'}
              </button>
           </div>
 
@@ -138,16 +160,17 @@ export const generateStandaloneHTML = (data: GeneratedContent, type: GameType): 
           <div class="options-grid">
       \`;
       
-      q.options.forEach(opt => {
+      q.options.forEach((opt, idx) => {
         let btnClass = "option-btn";
         if (hasAnswered) {
-             if (opt === q.correctAnswer) btnClass += " selected-correct";
-             else if (opt === userAnswers[currentQIndex].selected) btnClass += " selected-wrong";
+             const userSelected = userAnswers[currentQIndex].selected;
+             const correct = q.correctAnswer;
+             if (opt === correct) btnClass += " selected-correct";
+             else if (opt === userSelected) btnClass += " selected-wrong";
         }
         
-        const safeOpt = opt.replace(/'/g, "\\'");
-        const safeCorrect = q.correctAnswer.replace(/'/g, "\\'");
-        const clickAttr = hasAnswered ? '' : \`onclick="checkAnswer(this, '\${safeOpt}', '\${safeCorrect}')"\`;
+        // FIX: Pass index instead of string to avoid quoting errors
+        const clickAttr = hasAnswered ? '' : \`onclick="checkAnswer(\${idx})"\`;
         
         html += \`<div class="\${btnClass}" \${clickAttr}>\${opt}</div>\`;
       });
@@ -157,48 +180,29 @@ export const generateStandaloneHTML = (data: GeneratedContent, type: GameType): 
          if (userAnswers[currentQIndex].isCorrect) {
              html += "<span class='correct'>Chính xác! 👏</span>";
          } else {
-             html += "<span class='wrong'>Sai rồi! Đáp án: " + q.correctAnswer + "</span>";
+             html += "<span class='wrong'>Đáp án: " + q.correctAnswer + "</span>";
          }
       }
 
       html += \`</div></div>\`;
-      
       container.innerHTML = html;
       document.getElementById('score').innerText = currentScore;
     }
 
-    function checkAnswer(el, userAns, correctAns) {
+    function checkAnswer(optIndex) {
       if (userAnswers[currentQIndex]) return;
-
-      const isCorrect = userAns === correctAns;
-      userAnswers[currentQIndex] = { selected: userAns, isCorrect: isCorrect };
+      const q = gameData.questions[currentQIndex];
+      const userAns = q.options[optIndex];
+      const isCorrect = userAns === q.correctAnswer;
       
-      if (isCorrect) {
-        currentScore += 10;
-        playSound('correct');
-      } else {
-        playSound('wrong');
-      }
+      userAnswers[currentQIndex] = { selected: userAns, isCorrect: isCorrect };
+      if (isCorrect) { currentScore += 10; playSound('correct'); } else { playSound('wrong'); }
       renderGame();
     }
 
-    function prevQ() {
-        if (currentQIndex > 0) {
-            currentQIndex--;
-            renderGame();
-        }
-    }
-
-    function nextQ() {
-        if (currentQIndex < gameData.questions.length - 1) {
-            currentQIndex++;
-            renderGame();
-        }
-    }
-
-    function finishGame() {
-        showComplete();
-    }
+    function prevQ() { if (currentQIndex > 0) { currentQIndex--; renderGame(); } }
+    function nextQ() { if (currentQIndex < gameData.questions.length - 1) { currentQIndex++; renderGame(); } }
+    function finishGame() { showComplete(); }
   `;
 
   // --- MATCHING ENGINE ---
@@ -213,42 +217,25 @@ export const generateStandaloneHTML = (data: GeneratedContent, type: GameType): 
         window.rightItems = gameData.questions.map(q => ({id: q.id, val: q.matchPair.right})).sort(() => Math.random() - 0.5);
         window.shuffled = true;
       }
-
-      if (matchesFound === gameData.questions.length) {
-         showComplete();
-         return;
-      }
+      if (matchesFound === gameData.questions.length) { showComplete(); return; }
 
       let leftHtml = '';
       window.leftItems.forEach(item => {
         const isMatched = document.getElementById('left-'+item.id)?.classList.contains('matched');
-        if (!isMatched) {
-           leftHtml += \`<div id="left-\${item.id}" class="match-card fade-in" onclick="selectLeft('\${item.id}')">\${item.val}</div>\`;
-        }
+        if (!isMatched) leftHtml += \`<div id="left-\${item.id}" class="match-card fade-in" onclick="selectLeft('\${item.id}')">\${item.val}</div>\`;
       });
 
       let rightHtml = '';
       window.rightItems.forEach(item => {
         const isMatched = document.getElementById('right-'+item.id)?.classList.contains('matched');
-        if (!isMatched) {
-           rightHtml += \`<div id="right-\${item.id}" class="match-card fade-in" onclick="selectRight('\${item.id}')">\${item.val}</div>\`;
-        }
+        if (!isMatched) rightHtml += \`<div id="right-\${item.id}" class="match-card fade-in" onclick="selectRight('\${item.id}')">\${item.val}</div>\`;
       });
 
-      container.innerHTML = \`
-        <div class="match-container">
-          <div class="match-col">\${leftHtml}</div>
-          <div class="match-col">\${rightHtml}</div>
-        </div>
-        <div id="feedback" class="feedback">Chọn thẻ bên trái trước nhé!</div>
-      \`;
+      container.innerHTML = \`<div class="match-container"><div class="match-col">\${leftHtml}</div><div class="match-col">\${rightHtml}</div></div><div id="feedback" class="feedback">Chọn thẻ bên trái trước nhé!</div>\`;
     }
 
     function selectLeft(id) {
-      if (selectedLeft) {
-         const prev = document.getElementById('left-'+selectedLeft);
-         if(prev) prev.classList.remove('selected');
-      }
+      if (selectedLeft) document.getElementById('left-'+selectedLeft)?.classList.remove('selected');
       selectedLeft = id;
       document.getElementById('left-'+id).classList.add('selected');
       playSound('click');
@@ -257,22 +244,19 @@ export const generateStandaloneHTML = (data: GeneratedContent, type: GameType): 
 
     function selectRight(id) {
       if (!selectedLeft) return;
-      
       if (selectedLeft === id) {
         playSound('correct');
         document.getElementById('feedback').innerHTML = "<span class='correct'>Ghép đúng!</span>";
         matchesFound++;
         currentScore += 10;
         document.getElementById('score').innerText = currentScore;
-        
         document.getElementById('left-'+id).classList.add('matched');
         document.getElementById('right-'+id).classList.add('matched');
         selectedLeft = null;
-        
         if(matchesFound === gameData.questions.length) setTimeout(renderGame, 500);
       } else {
         playSound('wrong');
-        document.getElementById('feedback').innerHTML = "<span class='wrong'>Chưa đúng, thử lại!</span>";
+        document.getElementById('feedback').innerHTML = "<span class='wrong'>Chưa đúng!</span>";
         document.getElementById('left-'+selectedLeft).classList.remove('selected');
         selectedLeft = null;
       }
@@ -282,230 +266,299 @@ export const generateStandaloneHTML = (data: GeneratedContent, type: GameType): 
   // --- SEQUENCING ENGINE ---
   const sequencingScript = `
     function renderGame() {
-      // Flatten questions to get sequence items
       if (!window.seqItems) {
-        // Collect all sequencing items from questions
-        window.seqItems = gameData.questions
-           .map(q => ({ id: q.id, content: q.content, order: q.sequenceOrder }))
-           .sort(() => Math.random() - 0.5); // Initial Shuffle
+        window.seqItems = gameData.questions.map(q => ({ id: q.id, content: q.content, order: q.sequenceOrder })).sort(() => Math.random() - 0.5);
       }
-
       const container = document.getElementById('game-area');
-      let html = \`
-        <h3 style="margin-bottom:1.5rem">\${gameData.questions[0].question || "Sắp xếp theo đúng thứ tự:"}</h3>
-        <ul class="sequence-list" id="seq-list">\`;
-      
+      let html = \`<h3 style="margin-bottom:1.5rem">\${gameData.questions[0].question || "Sắp xếp theo đúng thứ tự:"}</h3><ul class="sequence-list" id="seq-list">\`;
       window.seqItems.forEach(item => {
-         html += \`<li class="sequence-item" draggable="true" data-id="\${item.id}" data-order="\${item.order}">
-           <div class="seq-index">::</div>
-           <div style="flex:1; text-align:left;">\${item.content}</div>
-         </li>\`;
+         html += \`<li class="sequence-item" draggable="true" data-id="\${item.id}" data-order="\${item.order}"><div class="seq-index">::</div><div style="flex:1; text-align:left;">\${item.content}</div></li>\`;
       });
-      
-      html += \`</ul>
-        <button class="btn" style="margin-top:2rem" onclick="checkOrder()">Kiểm tra kết quả</button>
-        <div id="feedback" class="feedback"></div>
-      \`;
+      html += \`</ul><button class="btn" style="margin-top:2rem" onclick="checkOrder()">Kiểm tra</button><div id="feedback" class="feedback"></div>\`;
       container.innerHTML = html;
       setupDragDrop();
     }
-
     function setupDragDrop() {
       const list = document.getElementById('seq-list');
       let draggedItem = null;
-
-      list.addEventListener('dragstart', e => {
-        draggedItem = e.target;
-        e.target.classList.add('dragging');
-      });
-
-      list.addEventListener('dragend', e => {
-        e.target.classList.remove('dragging');
-        playSound('click');
-      });
-
+      list.addEventListener('dragstart', e => { draggedItem = e.target; e.target.classList.add('dragging'); });
+      list.addEventListener('dragend', e => { e.target.classList.remove('dragging'); playSound('click'); });
       list.addEventListener('dragover', e => {
         e.preventDefault();
         const afterElement = getDragAfterElement(list, e.clientY);
-        if (afterElement == null) {
-          list.appendChild(draggedItem);
-        } else {
-          list.insertBefore(draggedItem, afterElement);
-        }
+        if (afterElement == null) list.appendChild(draggedItem); else list.insertBefore(draggedItem, afterElement);
       });
     }
-
     function getDragAfterElement(container, y) {
       const draggableElements = [...container.querySelectorAll('.sequence-item:not(.dragging)')];
       return draggableElements.reduce((closest, child) => {
         const box = child.getBoundingClientRect();
         const offset = y - box.top - box.height / 2;
-        if (offset < 0 && offset > closest.offset) {
-          return { offset: offset, element: child };
-        } else {
-          return closest;
-        }
+        if (offset < 0 && offset > closest.offset) return { offset: offset, element: child }; else return closest;
       }, { offset: Number.NEGATIVE_INFINITY }).element;
     }
-
     function checkOrder() {
       const items = document.querySelectorAll('.sequence-item');
       let isCorrect = true;
       let lastOrder = -9999;
-      
-      items.forEach(item => {
-        const currentOrder = parseInt(item.getAttribute('data-order'));
-        if (currentOrder < lastOrder) isCorrect = false;
-        lastOrder = currentOrder;
-      });
-
-      if (isCorrect) {
-         document.getElementById('feedback').innerHTML = "<span class='correct'>Tuyệt vời! Bạn đã sắp xếp đúng.</span>";
-         currentScore = 100;
-         document.getElementById('score').innerText = 100;
-         playSound('complete');
-         setTimeout(showComplete, 1500);
-      } else {
-         document.getElementById('feedback').innerHTML = "<span class='wrong'>Vẫn chưa đúng thứ tự. Hãy thử lại!</span>";
-         playSound('wrong');
-      }
+      items.forEach(item => { const currentOrder = parseInt(item.getAttribute('data-order')); if (currentOrder < lastOrder) isCorrect = false; lastOrder = currentOrder; });
+      if (isCorrect) { document.getElementById('feedback').innerHTML = "<span class='correct'>Chính xác!</span>"; currentScore = 100; document.getElementById('score').innerText = 100; playSound('complete'); setTimeout(showComplete, 1500); } 
+      else { document.getElementById('feedback').innerHTML = "<span class='wrong'>Chưa đúng thứ tự!</span>"; playSound('wrong'); }
     }
   `;
 
-  // --- SIMULATION ENGINE (Drag & Drop Sorting) ---
+  // --- SIMULATION / COMPARISON ENGINE ---
   const simulationScript = `
     let itemsPlaced = 0;
-    
     function renderGame() {
-      const simData = gameData.questions[0].simulationConfig;
+      const q = gameData.questions[0];
+      const simData = q.simulationConfig || q.comparisonConfig;
       if(!simData) return;
 
-      const container = document.getElementById('game-area');
+      // Normalize data structure for Comparison to look like Simulation
+      let zones = [];
+      let items = [];
       
+      if (q.simulationConfig) {
+        zones = simData.zones;
+        items = simData.items;
+      } else {
+        // Adapt Comparison Config
+        zones = [
+           { id: 'A', label: simData.groupA, color: '#dbeafe' },
+           { id: 'Both', label: 'Cả Hai', color: '#f3e8ff' },
+           { id: 'B', label: simData.groupB, color: '#fee2e2' }
+        ];
+        items = simData.items.map(i => ({ id: i.id, content: i.content, zoneId: i.belongsTo }));
+      }
+
+      const container = document.getElementById('game-area');
       let zonesHtml = '';
-      simData.zones.forEach(z => {
-         zonesHtml += \`
-           <div class="sim-zone" id="\${z.id}" style="background-color: \${z.color || '#f1f5f9'}" ondrop="drop(event)" ondragover="allowDrop(event)">
-             <div class="zone-label">\${z.label}</div>
-           </div>
-         \`;
+      zones.forEach(z => {
+         zonesHtml += \`<div class="sim-zone" id="\${z.id}" style="background-color: \${z.color}" ondrop="drop(event)" ondragover="allowDrop(event)"><div class="zone-label">\${z.label}</div></div>\`;
       });
 
       let itemsHtml = '';
-      if (!window.simItems) {
-         window.simItems = [...simData.items].sort(() => Math.random() - 0.5);
-      }
+      if (!window.simItems) window.simItems = [...items].sort(() => Math.random() - 0.5);
       
-      // Render only items not yet placed correctly
       window.simItems.forEach(item => {
-         if (!item.placed) {
-            itemsHtml += \`<div class="sim-item" draggable="true" id="\${item.id}" data-zone="\${item.zoneId}" ondragstart="drag(event)">\${item.content}</div>\`;
-         }
+         if (!item.placed) itemsHtml += \`<div class="sim-item" draggable="true" id="\${item.id}" data-zone="\${item.zoneId}" ondragstart="drag(event)">\${item.content}</div>\`;
       });
 
-      container.innerHTML = \`
-        <h3 style="margin-bottom:1rem">\${gameData.questions[0].question}</h3>
-        <div class="sim-area">
-           <div class="sim-items" id="source-zone" ondrop="drop(event)" ondragover="allowDrop(event)">
-             \${itemsHtml.length ? itemsHtml : '<span style="color:#cbd5e1">Đã hết vật phẩm</span>'}
-           </div>
-           <div class="sim-zones">\${zonesHtml}</div>
-        </div>
-        <div id="feedback" class="feedback">Kéo vật phẩm vào đúng khu vực</div>
-      \`;
+      container.innerHTML = \`<h3 style="margin-bottom:1rem">\${q.question}</h3><div class="sim-area"><div class="sim-items" id="source-zone" ondrop="drop(event)" ondragover="allowDrop(event)">\${itemsHtml.length ? itemsHtml : '<span style="color:#cbd5e1">Hoàn thành!</span>'}</div><div class="sim-zones">\${zonesHtml}</div></div><div id="feedback" class="feedback">Kéo thẻ vào đúng nhóm</div>\`;
     }
-
     function allowDrop(ev) { ev.preventDefault(); }
-
-    function drag(ev) {
-      ev.dataTransfer.setData("text", ev.target.id);
-      playSound('click');
-    }
-
+    function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); playSound('click'); }
     function drop(ev) {
       ev.preventDefault();
       const data = ev.dataTransfer.getData("text");
       const draggedEl = document.getElementById(data);
       if(!draggedEl) return;
-
-      // Find drop target (handle dropping on child elements)
       let targetZone = ev.target;
-      while (targetZone && !targetZone.classList.contains('sim-zone') && !targetZone.classList.contains('sim-items')) {
-        targetZone = targetZone.parentElement;
-      }
-
+      while (targetZone && !targetZone.classList.contains('sim-zone') && !targetZone.classList.contains('sim-items')) targetZone = targetZone.parentElement;
       if (!targetZone) return;
-
-      // Logic: If dropped in correct zone
-      const requiredZone = draggedEl.getAttribute('data-zone');
       
+      const requiredZone = draggedEl.getAttribute('data-zone');
       if (targetZone.id === requiredZone) {
-         targetZone.appendChild(draggedEl);
-         draggedEl.classList.add('sim-item-dropped');
-         draggedEl.setAttribute('draggable', 'false'); // Lock it
+         targetZone.appendChild(draggedEl); draggedEl.classList.add('sim-item-dropped'); draggedEl.setAttribute('draggable', 'false');
          playSound('correct');
-         
-         // Mark as placed in state
-         const itemData = window.simItems.find(i => i.id === data);
-         if(itemData) itemData.placed = true;
-         
-         itemsPlaced++;
-         currentScore += 10;
-         document.getElementById('score').innerText = currentScore;
-         
-         if (itemsPlaced === window.simItems.length) {
-            setTimeout(showComplete, 1000);
-         }
-      } else if (targetZone.id === 'source-zone') {
-         // Dropping back to source - allow
-         targetZone.appendChild(draggedEl);
-      } else {
-         playSound('wrong');
-         document.getElementById('feedback').innerHTML = "<span class='wrong'>Sai rồi! Vật này không thuộc về nhóm đó.</span>";
-         setTimeout(() => document.getElementById('feedback').innerText = "Thử lại nhé", 1500);
-      }
+         const itemData = window.simItems.find(i => i.id === data); if(itemData) itemData.placed = true;
+         itemsPlaced++; currentScore += 10; document.getElementById('score').innerText = currentScore;
+         if (itemsPlaced === window.simItems.length) setTimeout(showComplete, 1000);
+      } else if (targetZone.id === 'source-zone') { targetZone.appendChild(draggedEl); } 
+      else { playSound('wrong'); document.getElementById('feedback').innerHTML = "<span class='wrong'>Sai nhóm rồi!</span>"; setTimeout(() => document.getElementById('feedback').innerText = "Thử lại nhé", 1000); }
+    }
+  `;
+
+  // --- NUMBER GRID ENGINE (FIXED) ---
+  const numberGridScript = `
+    let openedCount = 0;
+    function renderGame() {
+       const container = document.getElementById('game-area');
+       let gridHtml = '';
+       gameData.questions.forEach((q, idx) => {
+         const isOpened = document.getElementById('cell-'+idx)?.classList.contains('opened');
+         if (!gridHtml) gridHtml = '<div class="number-grid">';
+         gridHtml += \`<div id="cell-\${idx}" class="grid-cell" onclick="openQuestion(\${idx})">\${isOpened ? '' : idx+1}</div>\`;
+       });
+       gridHtml += '</div>';
+       
+       if (!document.getElementById('grid-wrapper')) {
+          container.innerHTML = \`<div id="grid-wrapper">\${gridHtml}</div><div id="q-modal" class="hidden wheel-popup"></div>\`;
+       }
+    }
+
+    function openQuestion(idx) {
+       const cell = document.getElementById('cell-'+idx);
+       if(cell.classList.contains('opened')) return;
+       
+       const q = gameData.questions[idx];
+       const modal = document.getElementById('q-modal');
+       modal.classList.remove('hidden');
+       
+       let optionsHtml = '';
+       q.options.forEach((opt, optIdx) => {
+          // FIX: Pass indices instead of strings
+          optionsHtml += \`<button class="btn btn-secondary" style="width:100%; margin-bottom:0.5rem" onclick="checkGridAnswer(\${idx}, \${optIdx})">\${opt}</button>\`;
+       });
+
+       modal.innerHTML = \`<div class="popup-content"><h3>Câu hỏi số \${idx+1}</h3><p style="font-size:1.3rem; margin:1rem 0">\${q.question}</p><div>\${optionsHtml}</div></div>\`;
+       playSound('click');
+    }
+
+    function checkGridAnswer(qIdx, optIdx) {
+       const q = gameData.questions[qIdx];
+       const ans = q.options[optIdx];
+       const correct = q.correctAnswer;
+       const modal = document.getElementById('q-modal');
+       
+       if (ans === correct) {
+          playSound('correct');
+          modal.classList.add('hidden');
+          const cell = document.getElementById('cell-'+qIdx);
+          cell.classList.add('opened', 'correct');
+          cell.innerHTML = '⭐';
+          currentScore += 10;
+          document.getElementById('score').innerText = currentScore;
+          openedCount++;
+          if (openedCount === 9) setTimeout(showComplete, 1000);
+       } else {
+          playSound('wrong');
+          alert('Sai rồi! Thử lại sau nhé.');
+          modal.classList.add('hidden');
+       }
+    }
+  `;
+
+  // --- KEYWORD GUESS ENGINE ---
+  const keywordScript = `
+    let revealedCount = 0;
+    function renderGame() {
+       const data = gameData.questions[0].keywordConfig;
+       const container = document.getElementById('game-area');
+       
+       let cardsHtml = '';
+       data.keywords.forEach((kw, i) => {
+          cardsHtml += \`<div id="kw-\${i}" class="keyword-card">\${i+1}. \${kw}</div>\`;
+       });
+
+       container.innerHTML = \`
+         <h3>\${gameData.questions[0].question}</h3>
+         <div class="keyword-board">\${cardsHtml}</div>
+         <div style="margin-top:2rem">
+            <button id="reveal-btn" class="btn" onclick="revealNext()">Bắn tên (Hiện từ khóa)</button>
+            <button id="answer-btn" class="btn hidden" style="background:#8b5cf6" onclick="showAnswer()">Xem Đáp Án</button>
+         </div>
+         <div id="final-res" class="hidden" style="margin-top:2rem; font-size:2rem; font-weight:bold; color:#d97706">\${data.finalAnswer}</div>
+       \`;
+    }
+
+    function revealNext() {
+       const data = gameData.questions[0].keywordConfig;
+       if (revealedCount < data.keywords.length) {
+          document.getElementById('kw-'+revealedCount).classList.add('revealed');
+          playSound('click');
+          revealedCount++;
+          if (revealedCount === data.keywords.length) {
+             document.getElementById('reveal-btn').classList.add('hidden');
+             document.getElementById('answer-btn').classList.remove('hidden');
+          }
+       }
+    }
+
+    function showAnswer() {
+       playSound('complete');
+       document.getElementById('final-res').classList.remove('hidden');
+       document.getElementById('answer-btn').classList.add('hidden');
+       createConfetti();
+    }
+  `;
+
+  // --- MYSTERY BOX ENGINE (FIXED) ---
+  const mysteryBoxScript = `
+    let hintIndex = 0;
+    function renderGame() {
+       const container = document.getElementById('game-area');
+       const hints = gameData.questions[0].mysteryConfig.hints;
+       
+       let hintsHtml = '';
+       hints.forEach((h, i) => {
+          hintsHtml += \`<div id="hint-\${i}" class="hint-item">💡 \${h}</div>\`;
+       });
+
+       container.innerHTML = \`
+         <h3>\${gameData.questions[0].question}</h3>
+         <div class="mystery-box-container">
+            <div id="box" class="mystery-box" onclick="checkBox()">🎁</div>
+         </div>
+         <div class="hint-list">\${hintsHtml}</div>
+         <button id="hint-btn" class="btn" onclick="showHint()" style="margin-top:2rem">Xin gợi ý</button>
+         <div id="reveal-content" class="hidden fade-in" style="font-size:2rem; font-weight:bold; color:#9333ea; margin-top:2rem">\${gameData.questions[0].mysteryConfig.itemContent}</div>
+       \`;
+    }
+
+    function showHint() {
+       const hints = gameData.questions[0].mysteryConfig.hints;
+       if (hintIndex < hints.length) {
+          document.getElementById('hint-'+hintIndex).classList.add('revealed');
+          playSound('click');
+          hintIndex++;
+          if (hintIndex === hints.length) document.getElementById('hint-btn').innerText = "Hết gợi ý rồi!";
+       }
+    }
+
+    function checkBox() {
+       const box = document.getElementById('box');
+       if (document.getElementById('reveal-content').classList.contains('hidden')) {
+           box.classList.add('shaking');
+           playSound('click');
+           setTimeout(() => {
+              box.classList.remove('shaking');
+              const userAns = prompt("Bạn đoán trong hộp là gì?");
+              // FIX: Validate Answer Logic
+              const correct = gameData.questions[0].mysteryConfig.itemContent.trim().toLowerCase();
+              if (userAns) {
+                 const input = userAns.trim().toLowerCase();
+                 // Relaxed matching: exact or contains
+                 if (input === correct || input.includes(correct) || correct.includes(input)) {
+                     box.innerHTML = '🔓';
+                     box.style.background = '#22c55e';
+                     document.getElementById('reveal-content').classList.remove('hidden');
+                     playSound('complete');
+                     createConfetti();
+                     document.getElementById('hint-btn').classList.add('hidden');
+                 } else {
+                     playSound('wrong');
+                     alert("Chưa đúng rồi! Hãy thử lại hoặc xin thêm gợi ý.");
+                 }
+              }
+           }, 500);
+       }
     }
   `;
 
   // --- WHEEL ENGINE ---
   const wheelScript = `
     let isSpinning = false;
-    
     function renderGame() {
       const container = document.getElementById('game-area');
       const colors = ['#f87171', '#fb923c', '#fbbf24', '#a3e635', '#22d3ee', '#818cf8', '#e879f9', '#f472b6'];
-      
       const segmentSize = 360 / gameData.questions.length;
       let gradient = 'conic-gradient(';
-      gameData.questions.forEach((q, idx) => {
-         const color = colors[idx % colors.length];
-         gradient += \`\${color} \${idx * segmentSize}deg \${(idx + 1) * segmentSize}deg, \`;
-      });
+      gameData.questions.forEach((q, idx) => { const color = colors[idx % colors.length]; gradient += \`\${color} \${idx * segmentSize}deg \${(idx + 1) * segmentSize}deg, \`; });
       gradient = gradient.slice(0, -2) + ')';
 
-      container.innerHTML = \`
-        <div class="wheel-container">
-            <div class="wheel-pointer"></div>
-            <div id="wheel" class="wheel-wrapper" style="background: \${gradient}"></div>
-        </div>
-        <button id="spin-btn" class="btn" style="font-size: 1.5rem; padding: 15px 40px;" onclick="spinWheel()">QUAY NGAY</button>
-        <div id="question-modal" class="hidden wheel-popup"></div>
-      \`;
+      container.innerHTML = \`<div class="wheel-container"><div class="wheel-pointer"></div><div id="wheel" class="wheel-wrapper" style="background: \${gradient}"></div></div><button id="spin-btn" class="btn" style="font-size: 1.5rem; padding: 15px 40px;" onclick="spinWheel()">QUAY NGAY</button><div id="question-modal" class="hidden wheel-popup"></div>\`;
     }
 
     function spinWheel() {
       if (isSpinning) return;
-      isSpinning = true;
-      playSound('click');
-      
+      isSpinning = true; playSound('click');
       const wheel = document.getElementById('wheel');
       const randomDeg = Math.floor(Math.random() * 360) + 1800;
-      
       wheel.style.transform = \`rotate(\${randomDeg}deg)\`;
-      
       setTimeout(() => {
         isSpinning = false;
-        // Logic to pick random question
         const qIndex = Math.floor(Math.random() * gameData.questions.length);
         showQuestion(gameData.questions[qIndex]);
       }, 4100);
@@ -514,27 +567,19 @@ export const generateStandaloneHTML = (data: GeneratedContent, type: GameType): 
     function showQuestion(q) {
         const modal = document.getElementById('question-modal');
         modal.classList.remove('hidden');
-        modal.innerHTML = \`
-           <div class="popup-content">
-             <h3 style="color:#0284c7; margin-bottom:1rem;">Câu hỏi may mắn</h3>
-             <p style="font-size:1.4rem; margin-bottom:1.5rem; font-weight:bold">\${q.question}</p>
-             <p class="hidden" id="wheel-answer" style="color:#16a34a; font-weight:bold; font-size:1.2rem; margin:1rem 0; border:2px dashed #22c55e; padding:10px; border-radius:8px;">Đáp án: \${q.correctAnswer}</p>
-             <p style="font-size:1rem; color: #64748b;">\${q.explanation || ''}</p>
-             <div style="margin-top:2rem;">
-               <button class="btn" onclick="document.getElementById('wheel-answer').classList.remove('hidden'); playSound('correct')">Xem đáp án</button>
-               <button class="btn btn-secondary" onclick="document.getElementById('question-modal').classList.add('hidden')">Đóng</button>
-             </div>
-           </div>
-        \`;
+        modal.innerHTML = \`<div class="popup-content"><h3 style="color:#0284c7;">Câu hỏi may mắn</h3><p style="font-size:1.4rem; margin-bottom:1.5rem; font-weight:bold">\${q.question}</p><p class="hidden" id="wheel-answer" style="color:#16a34a; font-weight:bold; font-size:1.2rem; margin:1rem 0; border:2px dashed #22c55e; padding:10px; border-radius:8px;">Đáp án: \${q.correctAnswer}</p><div style="margin-top:2rem;"><button class="btn" onclick="document.getElementById('wheel-answer').classList.remove('hidden'); playSound('correct')">Xem đáp án</button><button class="btn btn-secondary" onclick="document.getElementById('question-modal').classList.add('hidden')">Đóng</button></div></div>\`;
     }
   `;
 
   let selectedScript = '';
-  if (type === 'quiz') selectedScript = quizScript;
+  if (type === 'quiz' || type === 'fast_quiz') selectedScript = quizScript;
   else if (type === 'matching') selectedScript = matchingScript;
   else if (type === 'sequencing') selectedScript = sequencingScript;
-  else if (type === 'simulation') selectedScript = simulationScript;
+  else if (type === 'simulation' || type === 'comparison') selectedScript = simulationScript;
   else if (type === 'wheel') selectedScript = wheelScript;
+  else if (type === 'number_grid') selectedScript = numberGridScript;
+  else if (type === 'keyword_guess') selectedScript = keywordScript;
+  else if (type === 'mystery_box') selectedScript = mysteryBoxScript;
 
   return `<!DOCTYPE html>
 <html lang="vi">
