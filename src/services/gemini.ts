@@ -12,7 +12,7 @@ const genAI = new GoogleGenerativeAI(apiKey || "MISSING_KEY");
 
 export const generateGameContent = async (config: GameConfig): Promise<GeneratedContent> => {
   // Logic giữ nguyên, chỉ thay đổi cách gọi model
-  const modelId = "gemini-1.5-flash"; 
+  const modelId = "gemini-2.5-flash"; 
   const model = genAI.getGenerativeModel({ model: modelId });
 
   const prompt = `
