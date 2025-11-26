@@ -1,0 +1,5 @@
+{
+  "name": "Trợ Lý tạo game dạy học",
+  "description": "Công cụ tạo trò chơi giáo dục tương tác dựa trên nội dung SGK Việt Nam (GDPT 2018) sử dụng Gemini AI.",
+  "requestFramePermissions": []
+}
