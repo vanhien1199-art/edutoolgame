@@ -25,80 +25,118 @@ export const generateGameContent = async (config: GameConfig): Promise<Generated
   - Loại game: ${config.gameType}
   ${config.activityType === 'practice' ? `- Số lượng câu hỏi: ${config.questionCount}` : ''}
 
-  1. Hãy TÌM KIẾM (dùng công cụ) nội dung thực tế của bài học này trong SGK.
-  2. Tạo dữ liệu trò chơi dưới dạng JSON chuẩn (không markdown).
-  
+  1. Hãy TÌM KIẾM (dùng công cụ) nội dung liên quan của bài học này trong SGK (ưu tiên tính huống mở đầu, ví dụ, tình huống mở đầu, hình ảnh, bài tập, từ khóa quan trọng).
+  2. Tạo dữ liệu trò chơi dưới dạng JSON.
+  ${config.activityType === 'practice' ? `\n  Yêu cầu về số lượng: Tạo chính xác ${config.questionCount} mục trong mảng "questions".` : ''}
+
   CẤU TRÚC JSON TRẢ VỀ:
   {
-    "title": "Tên trò chơi",
-    "description": "Hướng dẫn cách chơi",
-    "questions": [ ... ]
+    "title": "Tên trò chơi (Hấp dẫn, liên quan bài học)",
+    "description": "Hướng dẫn cách chơi ngắn gọn",
+    "questions": [ ... danh sách câu hỏi/dữ liệu ...]
   }
-  
+
   CHI TIẾT CẤU TRÚC "questions" THEO TỪNG LOẠI GAME:
 
-  *** LOẠI 1: simulation (Mô phỏng - Dành cho Warm-up) ***
-  Mục tiêu: Tạo ra một hoạt động Kéo & Thả (Drag & Drop) để phân loại hoặc ghép hình.
-  Chỉ trả về 1 phần tử trong mảng "questions" chứa cấu hình toàn bộ màn chơi.
-  Cấu trúc:
+  *** LOẠI: fast_quiz (Kahoot/Quizizz) ***
+  Tạo các câu hỏi trắc nghiệm NHANH, ngắn gọn, kích thích tư duy.
+  {
+    "id": "fq1",
+    "question": "Câu hỏi ngắn...",
+    "options": ["A", "B", "C", "D"],
+    "correctAnswer": "Đáp án đúng",
+    "explanation": "Giải thích siêu ngắn"
+  }
+
+  *** LOẠI: comparison (Tìm điểm chung/khác) ***
+  So sánh 2 đối tượng/khái niệm trong bài học. Chỉ trả về 1 item duy nhất cấu hình game.
+  {
+    "id": "comp1",
+    "question": "Hãy phân loại các đặc điểm sau vào nhóm phù hợp",
+    "comparisonConfig": {
+       "groupA": "Đối tượng A (Ví dụ: Tế bào thực vật)",
+       "groupB": "Đối tượng B (Ví dụ: Tế bào động vật)",
+       "items": [
+          { "id": "i1", "content": "Có thành cellulozo", "belongsTo": "A" },
+          { "id": "i2", "content": "Có nhân", "belongsTo": "Both" },
+          { "id": "i3", "content": "Không có lục lạp", "belongsTo": "B" }
+          // Tạo khoảng 6-8 item
+       ]
+    }
+  }
+
+  *** LOẠI: number_grid (Chọn ô số) ***
+  Tạo chính xác 9 câu hỏi cho 9 ô số.
+  {
+    "id": "ng1",
+    "question": "Câu hỏi cho ô số 1...",
+    "options": ["A", "B", "C", "D"],
+    "correctAnswer": "Đáp án đúng",
+    "explanation": "Giải thích"
+  }
+
+  *** LOẠI: keyword_guess (Bắn tên/Đoán từ khóa) ***
+  Chỉ trả về 1 item duy nhất.
+  {
+    "id": "kg1",
+    "question": "Đuổi hình bắt chữ / Đoán chủ đề",
+    "keywordConfig": {
+       "keywords": ["Từ khóa 1", "Từ khóa 2", "Từ khóa 3", "Từ khóa 4"],
+       "finalAnswer": "Tên chủ đề/bài học cần đoán"
+    }
+  }
+
+  *** LOẠI: mystery_box (Hộp bí mật) ***
+  Chỉ trả về 1 item duy nhất.
+  {
+    "id": "mb1",
+    "question": "Trong hộp bí mật có gì?",
+    "mysteryConfig": {
+       "hints": [
+          "Gợi ý 1: Nó có màu...",
+          "Gợi ý 2: Nó dùng để...",
+          "Gợi ý 3: Nó xuất hiện ở..."
+       ],
+       "itemContent": "Tên vật/khái niệm trong hộp"
+    }
+  }
+
+  *** LOẠI: simulation (Mô phỏng tương tác) ***
+  Chỉ trả về 1 phần tử cấu hình toàn bộ màn chơi Kéo-Thả.
   {
     "id": "sim1",
-    "question": "Câu lệnh hướng dẫn (Ví dụ: Hãy kéo các quả táo vào giỏ tương ứng)",
+    "question": "Câu lệnh hướng dẫn...",
     "simulationConfig": {
-       "backgroundTheme": "Mô tả bối cảnh (Ví dụ: Bàn tiệc, Nông trại, Vũ trụ)",
+       "backgroundTheme": "Mô tả bối cảnh",
        "zones": [
-          { "id": "z1", "label": "Nhãn khu vực 1 (Ví dụ: Số chẵn)", "color": "#e0f2fe" },
-          { "id": "z2", "label": "Nhãn khu vực 2 (Ví dụ: Số lẻ)", "color": "#fce7f3" }
+          { "id": "z1", "label": "Khu vực 1", "color": "#e0f2fe" },
+          { "id": "z2", "label": "Khu vực 2", "color": "#fce7f3" }
        ],
        "items": [
-          { "id": "i1", "content": "Nội dung (Chữ hoặc Emoji)", "zoneId": "z1" },
-          { "id": "i2", "content": "Nội dung", "zoneId": "z2" }
+          { "id": "i1", "content": "Nội dung", "zoneId": "z1" }
           // Tạo khoảng 6-10 item
        ]
     }
   }
 
-  *** LOẠI 2: sequencing (Sắp xếp thứ tự) ***
-  Mục tiêu: Sắp xếp các bước/quy trình/sự kiện theo đúng trật tự.
-  Cấu trúc:
+  *** LOẠI: sequencing (Sắp xếp thứ tự) ***
   {
     "id": "seq1",
-    "question": "Hãy sắp xếp các bước sau theo đúng trình tự:",
-    "sequenceOrder": 1, // Thứ tự đúng (1, 2, 3...)
-    "content": "Nội dung bước (Ví dụ: Trứng nở ra ấu trùng)" 
-  }
-  (Tạo 4-6 mục với sequenceOrder từ 1 đến N, xáo trộn thứ tự trong mảng cũng được, client sẽ hiển thị xáo trộn)
-
-  *** LOẠI 3: quiz (Trắc nghiệm) ***
-  {
-    "id": "q1",
-    "question": "Câu hỏi...",
-    "options": ["A", "B", "C", "D"],
-    "correctAnswer": "Đáp án đúng",
-    "explanation": "Giải thích ngắn"
+    "question": "Sắp xếp theo thứ tự...",
+    "sequenceOrder": 1, // 1, 2, 3...
+    "content": "Nội dung bước" 
   }
 
-  *** LOẠI 4: matching (Ghép đôi) ***
-  {
-    "id": "m1",
-    "question": "Ghép cặp",
-    "matchPair": { "left": "Vế trái", "right": "Vế phải" }
-  }
+  *** LOẠI: quiz (Trắc nghiệm thường) ***
+  { "id": "q1", "question": "...", "options": ["..."], "correctAnswer": "...", "explanation": "..." }
 
-  *** LOẠI 5: wheel (Vòng quay) ***
-  {
-    "id": "w1",
-    "question": "Câu hỏi...",
-    "wheelLabel": "Nhãn trên vòng quay (ngắn)",
-    "correctAnswer": "Đáp án",
-    "explanation": "Giải thích"
-  }
+  *** LOẠI: matching (Ghép đôi) ***
+  { "id": "m1", "question": "...", "matchPair": { "left": "...", "right": "..." } }
 
-  YÊU CẦU QUAN TRỌNG:
-  - Nội dung phải CHÍNH XÁC theo kiến thức bài học trong SGK ${config.bookSeries}.
-  - Nếu là Simulation: Hãy chọn tình huống thực tế trong sách (Ví dụ: Toán lớp 1 bài Cao thấp -> Kéo vật vào ô Cao/Thấp; KHTN bài Tách chất -> Kéo dụng cụ vào đúng phương pháp).
-  ${config.activityType === 'practice' ? `- Phải tạo chính xác ${config.questionCount} câu hỏi/mục.` : ''}
-  - Chỉ trả về JSON thuần, không markdown.
+  *** LOẠI: wheel (Vòng quay) ***
+  { "id": "w1", "question": "...", "wheelLabel": "...", "correctAnswer": "...", "explanation": "..." }
+
+  YÊU CẦU: JSON thuần, không markdown, nội dung chính xác SGK.
   `;
 
   try {
