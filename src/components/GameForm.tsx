@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { GameConfig, GameType } from '../types';
-import { BookOpen, Gamepad2, BrainCircuit, ListOrdered, MousePointerClick, Puzzle, Trophy } from 'lucide-react';
+import { BookOpen, Gamepad2, BrainCircuit, ListOrdered, Zap, Grid3X3, Package, Target } from 'lucide-react';
 
 interface GameFormProps {
   config: GameConfig;
@@ -11,12 +11,18 @@ interface GameFormProps {
 
 const GameForm: React.FC<GameFormProps> = ({ config, onChange, onSubmit, isLoading }) => {
 
-  // Enforce game type logic based on activity
+  // Auto-set default game type when switching activity if current type is invalid
   useEffect(() => {
-    if (config.activityType === 'warmup' && config.gameType !== 'simulation') {
-      onChange('gameType', 'simulation');
-    } else if (config.activityType === 'practice' && config.gameType === 'simulation') {
-      onChange('gameType', 'quiz');
+    if (config.activityType === 'warmup') {
+      const validWarmups = ['simulation', 'fast_quiz', 'comparison', 'number_grid', 'keyword_guess', 'mystery_box'];
+      if (!validWarmups.includes(config.gameType)) {
+        onChange('gameType', 'fast_quiz');
+      }
+    } else if (config.activityType === 'practice') {
+      const validPractice = ['quiz', 'matching', 'sequencing', 'wheel'];
+      if (!validPractice.includes(config.gameType)) {
+        onChange('gameType', 'quiz');
+      }
     }
   }, [config.activityType, onChange, config.gameType]);
 
@@ -25,6 +31,15 @@ const GameForm: React.FC<GameFormProps> = ({ config, onChange, onSubmit, isLoadi
     { id: 'matching', name: 'Ghép đôi', icon: <div className="text-2xl">🧩</div> },
     { id: 'sequencing', name: 'Sắp xếp', icon: <ListOrdered size={24} /> },
     { id: 'wheel', name: 'Vòng quay', icon: <div className="text-2xl">🎡</div> },
+  ];
+
+  const warmupGames: {id: GameType, name: string, desc: string, icon: React.ReactNode}[] = [
+    { id: 'fast_quiz', name: 'Kahoot / Quizizz', desc: 'Trắc nghiệm nhanh tranh điểm', icon: <Zap size={24} className="text-yellow-500"/> },
+    { id: 'comparison', name: 'Điểm chung - Khác', desc: 'So sánh 2 khái niệm/hình ảnh', icon: <div className="text-2xl">⚖️</div> },
+    { id: 'number_grid', name: 'Chọn ô số', desc: '9 ô số bí mật gợi mở bài học', icon: <Grid3X3 size={24} className="text-blue-500"/> },
+    { id: 'keyword_guess', name: 'Bắn tên (3 từ khóa)', desc: 'Đoán nội dung từ các từ khóa', icon: <Target size={24} className="text-red-500"/> },
+    { id: 'mystery_box', name: 'Hộp bí mật', desc: 'Đoán vật trong hộp qua dữ kiện', icon: <Package size={24} className="text-purple-500"/> },
+    { id: 'simulation', name: 'Mô phỏng tương tác', desc: 'Kéo thả, thao tác vật thể', icon: <BrainCircuit size={24} className="text-green-500"/> },
   ];
 
   return (
@@ -151,17 +166,30 @@ const GameForm: React.FC<GameFormProps> = ({ config, onChange, onSubmit, isLoadi
 
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">
-            {config.activityType === 'warmup' ? 'Loại Trò Chơi (Tự động chọn cho Khởi động)' : 'Chọn Loại Trò Chơi'}
+            {config.activityType === 'warmup' ? 'Chọn Game Khởi Động' : 'Chọn Game Luyện Tập'}
           </label>
           
           {config.activityType === 'warmup' ? (
-            <div className="border-2 border-blue-500 bg-blue-50 p-4 rounded-xl flex items-center gap-4 text-blue-700">
-               <BrainCircuit size={32} />
-               <div>
-                 <h4 className="font-bold">Mô Phỏng Tương Tác (Simulation)</h4>
-                 <p className="text-sm">Học sinh thao tác trực tiếp (kéo thả, phân loại) để khám phá bài học.</p>
-               </div>
-            </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+               {warmupGames.map((type) => (
+                  <button
+                    key={type.id}
+                    type="button"
+                    className={`flex items-start gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                      config.gameType === type.id
+                        ? 'border-blue-500 bg-blue-50 text-blue-800'
+                        : 'border-slate-200 hover:border-slate-300 text-slate-600'
+                    }`}
+                    onClick={() => onChange('gameType', type.id)}
+                  >
+                    <div className="mt-1 flex-shrink-0">{type.icon}</div>
+                    <div>
+                      <div className="font-bold">{type.name}</div>
+                      <div className="text-xs opacity-75">{type.desc}</div>
+                    </div>
+                  </button>
+               ))}
+             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {practiceGames.map((type) => (
