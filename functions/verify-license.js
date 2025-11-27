@@ -20,9 +20,9 @@ export async function onRequestPost(context) {
 
         // CÁCH 2: Kiểm tra từ Cloudflare KV (Cần tạo KV Namespace tên là LICENSE_KV)
         if (env.LICENSE_KV) {
-        //     const storedValue = await env.LICENSE_KV.get(licenseKey);
-        //     if (storedValue === "active") isValid = true;
-        // }
+             const storedValue = await env.LICENSE_KV.get(licenseKey);
+             if (storedValue === "active") isValid = true;
+         }
 
         if (isValid) {
             return new Response(JSON.stringify({ valid: true, message: "Kích hoạt thành công!" }), {
@@ -40,3 +40,4 @@ export async function onRequestPost(context) {
     }
 
 }
+
