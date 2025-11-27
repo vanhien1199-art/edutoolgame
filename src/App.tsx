@@ -31,48 +31,46 @@ const App: React.FC = () => {
 
   const [content, setContent] = useState<GeneratedContent | null>(null);
 
-  // --- CHECK LICENSE ---
+  // --- CHECK LICENSE TỪ LOCALSTORAGE ---
   useEffect(() => {
     const savedKey = localStorage.getItem('app_license_key');
     if (savedKey) setIsVerified(true);
   }, []);
 
-  // --- HÀM XỬ LÝ VERIFY ---
+  // --- XỬ LÝ VERIFY LICENSE ---
   const handleVerifyLicense = async (e: React.FormEvent) => {
-    // Nếu gọi từ form submit
-    if(e) e.preventDefault();
-    
+    e.preventDefault();
     setVerifying(true);
     setLicenseError('');
 
+    // Logic kiểm tra mã (Demo code)
+    // Trong thực tế bạn sẽ gọi API ở đây
     try {
-      const response = await fetch('/verify-license', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ licenseKey: licenseInput })
-      });
-      const data = await response.json();
-
-      if (response.ok && data.valid) {
-        setIsVerified(true);
-        localStorage.setItem('app_license_key', licenseInput);
+      if (licenseInput.trim().toUpperCase() === 'DEMO-2025') {
+         // Giả lập delay mạng
+         setTimeout(() => {
+             setIsVerified(true);
+             localStorage.setItem('app_license_key', licenseInput);
+         }, 1000);
       } else {
-        setLicenseError(data.message || 'Mã không hợp lệ');
+         // Nếu có backend thật thì uncomment đoạn dưới:
+         /*
+         const response = await fetch('/verify-license', {
+            method: 'POST',
+            body: JSON.stringify({ licenseKey: licenseInput })
+         });
+         const data = await response.json();
+         if(data.valid) ...
+         */
+         setLicenseError('Mã kích hoạt không đúng. Vui lòng thử lại.');
+         setVerifying(false);
       }
     } catch (err) {
-      // Fallback test code
-      if (licenseInput === 'DEMO-2025') {
-         setIsVerified(true);
-         localStorage.setItem('app_license_key', licenseInput);
-      } else {
-         setLicenseError('Lỗi kết nối server.');
-      }
-    } finally {
+      setLicenseError('Lỗi kết nối.');
       setVerifying(false);
     }
   };
 
-  // --- LOGIC GAME ---
   const handleGenerate = async () => {
     if (!config.lessonName) return;
     setLoading(true);
@@ -152,12 +150,13 @@ const App: React.FC = () => {
                 <p className="text-slate-600 text-lg">Tạo trò chơi tương tác thông minh</p>
               </div>
               
-              {/* Truyền các props quản lý License xuống GameForm */}
+              {/* === PHẦN QUAN TRỌNG NHẤT: TRUYỀN PROPS LICENSE XUỐNG === */}
               <GameForm
                 config={config}
                 onChange={(key, val) => setConfig(prev => ({ ...prev, [key]: val }))}
                 onSubmit={handleGenerate}
                 isLoading={loading}
+                // Các dòng này sẽ kích hoạt hiển thị khung nhập trong GameForm
                 isVerified={isVerified}
                 onVerify={handleVerifyLicense}
                 licenseInput={licenseInput}
@@ -169,7 +168,6 @@ const App: React.FC = () => {
           )}
 
           {step === 'review' && content && (
-             // --- PHẦN REVIEW GIỮ NGUYÊN NHƯ CŨ (Chỉ hiển thị khi đã tạo game) ---
              <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
                 <div className="bg-white rounded-2xl p-6 shadow-xl border border-blue-100">
                     <div className="flex justify-between items-center mb-6 border-b pb-4">
@@ -186,26 +184,34 @@ const App: React.FC = () => {
                             </button>
                         </div>
                     </div>
-                    {/* ... (Phần render câu hỏi review giữ nguyên) ... */}
+                    
+                    {/* Phần Review nội dung giữ nguyên */}
                     <div className="space-y-6">
-                         {content.questions.map((q, idx) => (
-                            <div key={q.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        {content.questions.map((q, idx) => (
+                            <div key={q.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200 hover:border-blue-300 transition">
                                 <div className="flex items-start gap-4">
-                                    <span className="bg-blue-100 text-blue-700 font-bold w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0">{idx+1}</span>
+                                    <span className="bg-blue-100 text-blue-700 font-bold w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0">
+                                        {idx + 1}
+                                    </span>
                                     <div className="flex-1 space-y-3">
-                                       <input className="w-full p-2 border border-slate-300 rounded font-medium" value={q.question} onChange={(e)=>handleUpdateQuestion(idx, 'question', e.target.value)} />
-                                       
-                                       {/* Render đơn giản để tránh code quá dài trong ví dụ này - Logic giữ nguyên */}
-                                       {(config.gameType === 'quiz' || config.gameType === 'fast_quiz') && q.options && (
+                                        <input
+                                            className="w-full p-2 border border-slate-300 rounded focus:border-blue-500 outline-none font-medium"
+                                            value={q.question}
+                                            onChange={(e) => handleUpdateQuestion(idx, 'question', e.target.value)}
+                                        />
+                                        
+                                        {(config.gameType === 'quiz' || config.gameType === 'fast_quiz') && q.options && (
                                            <div className="grid grid-cols-2 gap-3">
-                                              {q.options.map((opt, oi) => <div key={oi} className="p-2 border rounded text-sm bg-white">{opt}</div>)}
+                                              {q.options.map((opt, oi) => (
+                                                <div key={oi} className="p-2 border rounded text-sm bg-white border-slate-200">{opt}</div>
+                                              ))}
                                            </div>
-                                       )}
-                                       {/* Bạn có thể paste lại logic render chi tiết ở đây nếu muốn */}
+                                        )}
+                                        {/* Bạn có thể bổ sung phần hiển thị chi tiết các game khác tại đây nếu cần */}
                                     </div>
                                 </div>
                             </div>
-                         ))}
+                        ))}
                     </div>
                 </div>
              </div>
