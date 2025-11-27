@@ -34,46 +34,43 @@ const App: React.FC = () => {
   // --- CHECK LICENSE TỪ LOCALSTORAGE ---
   useEffect(() => {
     const savedKey = localStorage.getItem('app_license_key');
-    if (savedKey) setIsVerified(true);
+    if (savedKey) {
+        setLicenseInput(savedKey);
+        setIsVerified(true);
+    }
   }, []);
 
-  // --- XỬ LÝ VERIFY LICENSE ---
+  // --- XỬ LÝ KÍCH HOẠT (CHỈ ĐỂ MỞ KHÓA UI) ---
   const handleVerifyLicense = async (e: React.FormEvent) => {
-    e.preventDefault();
+    if(e) e.preventDefault();
     setVerifying(true);
     setLicenseError('');
 
-    // Logic kiểm tra mã (Demo code)
-    // Trong thực tế bạn sẽ gọi API ở đây
+    // Ở phương án 2, việc kiểm tra kỹ và trừ tiền sẽ nằm ở bước Tạo Game.
+    // Bước này chỉ để kiểm tra format sơ bộ hoặc cho phép nhập mã.
     try {
-      if (licenseInput.trim().toUpperCase() === 'DEMO-2025') {
-         // Giả lập delay mạng
-         setTimeout(() => {
-             setIsVerified(true);
-             localStorage.setItem('app_license_key', licenseInput);
-         }, 1000);
-      } else {
-         // Nếu có backend thật thì uncomment đoạn dưới:
-         /*
-         const response = await fetch('/verify-license', {
-            method: 'POST',
-            body: JSON.stringify({ licenseKey: licenseInput })
-         });
-         const data = await response.json();
-         if(data.valid) ...
-         */
-         setLicenseError('Mã kích hoạt không đúng. Vui lòng thử lại.');
-         setVerifying(false);
-      }
+        if (!licenseInput.trim()) {
+            setLicenseError('Vui lòng nhập mã.');
+            setVerifying(false);
+            return;
+        }
+
+        // Tạm thời cho phép qua bước này để mở khóa nút bấm.
+        // Server sẽ từ chối sau nếu mã sai/hết tiền.
+        setTimeout(() => {
+            setIsVerified(true);
+            localStorage.setItem('app_license_key', licenseInput);
+            setVerifying(false);
+        }, 500);
+
     } catch (err) {
-      setLicenseError('Lỗi kết nối.');
+      setLicenseError('Lỗi hệ thống.');
       setVerifying(false);
     }
   };
 
-  // Trong src/App.tsx
-
-const handleGenerate = async () => {
+  // --- LOGIC TẠO GAME (GỌI SERVER ĐỂ TRỪ TIỀN & TẠO) ---
+  const handleGenerate = async () => {
     if (!config.lessonName) return;
 
     // Bắt buộc phải có mã mới cho tạo
@@ -84,23 +81,25 @@ const handleGenerate = async () => {
 
     setLoading(true);
     try {
-      // Truyền licenseInput vào hàm generate
+      // GỌI SERVER: Truyền config + licenseKey để server xử lý
       const data = await generateGameContent(config, licenseInput);
       
       setContent(data);
       setStep('review');
       
-      // Nếu không phải demo thì thông báo trừ tiền
+      // Thông báo nhỏ (Tùy chọn)
       if (licenseInput !== 'DEMO-2025') {
-          alert("Tạo thành công! (Tài khoản đã bị trừ 1 lượt)");
+          console.log("Đã trừ 1 lượt sử dụng.");
       }
     } catch (error) {
+      // Hiển thị lỗi từ Server trả về (VD: Hết tiền, Mã sai)
       alert((error as Error).message);
     } finally {
       setLoading(false);
     }
-};
+  };
 
+  // --- LOGIC TẢI GAME ---
   const handleDownload = () => {
     if (!content) return;
     const html = generateStandaloneHTML(content, config.gameType);
@@ -115,6 +114,7 @@ const handleGenerate = async () => {
     URL.revokeObjectURL(url);
   };
 
+  // --- LOGIC SỬA CÂU HỎI ---
   const handleUpdateQuestion = (index: number, field: keyof QuestionItem, value: any) => {
     if (!content) return;
     const newQuestions = [...content.questions];
@@ -166,13 +166,12 @@ const handleGenerate = async () => {
                 <p className="text-slate-600 text-lg">Tạo trò chơi tương tác thông minh</p>
               </div>
               
-              {/* === PHẦN QUAN TRỌNG NHẤT: TRUYỀN PROPS LICENSE XUỐNG === */}
+              {/* TRUYỀN PROPS LICENSE XUỐNG GAMEFORM */}
               <GameForm
                 config={config}
                 onChange={(key, val) => setConfig(prev => ({ ...prev, [key]: val }))}
                 onSubmit={handleGenerate}
                 isLoading={loading}
-                // Các dòng này sẽ kích hoạt hiển thị khung nhập trong GameForm
                 isVerified={isVerified}
                 onVerify={handleVerifyLicense}
                 licenseInput={licenseInput}
@@ -190,54 +189,3 @@ const handleGenerate = async () => {
                         <div>
                             <h2 className="text-2xl font-bold text-slate-800">{content.title}</h2>
                             <p className="text-slate-500">{content.description}</p>
-                        </div>
-                        <div className="flex gap-3">
-                            <button onClick={() => setStep('setup')} className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition">
-                                <ArrowLeft size={18} /> Quay lại
-                            </button>
-                            <button onClick={handleDownload} className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white font-bold rounded-lg shadow hover:bg-green-700 transition">
-                                <Download size={20} /> Tải Game
-                            </button>
-                        </div>
-                    </div>
-                    
-                    {/* Phần Review nội dung giữ nguyên */}
-                    <div className="space-y-6">
-                        {content.questions.map((q, idx) => (
-                            <div key={q.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200 hover:border-blue-300 transition">
-                                <div className="flex items-start gap-4">
-                                    <span className="bg-blue-100 text-blue-700 font-bold w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0">
-                                        {idx + 1}
-                                    </span>
-                                    <div className="flex-1 space-y-3">
-                                        <input
-                                            className="w-full p-2 border border-slate-300 rounded focus:border-blue-500 outline-none font-medium"
-                                            value={q.question}
-                                            onChange={(e) => handleUpdateQuestion(idx, 'question', e.target.value)}
-                                        />
-                                        
-                                        {(config.gameType === 'quiz' || config.gameType === 'fast_quiz') && q.options && (
-                                           <div className="grid grid-cols-2 gap-3">
-                                              {q.options.map((opt, oi) => (
-                                                <div key={oi} className="p-2 border rounded text-sm bg-white border-slate-200">{opt}</div>
-                                              ))}
-                                           </div>
-                                        )}
-                                        {/* Bạn có thể bổ sung phần hiển thị chi tiết các game khác tại đây nếu cần */}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-             </div>
-          )}
-        </div>
-      </main>
-
-      <Footer />
-    </div>
-  );
-};
-
-export default App;
