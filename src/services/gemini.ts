@@ -25,7 +25,7 @@ export const generateGameContent = async (config: GameConfig): Promise<Generated
   - Loại game: ${config.gameType}
   ${config.activityType === 'practice' ? `- Số lượng câu hỏi: ${config.questionCount}` : ''}
 
-  1. Hãy TÌM KIẾM (dùng công cụ) nội dung liên quan của bài học này trong SGK (ưu tiên tính huống mở đầu, ví dụ, tình huống mở đầu, hình ảnh, bài tập, từ khóa quan trọng).
+  1. Hãy TÌM KIẾM (dùng công cụ) tình huống mở đầu hoặc nội dung liên quan của bài học này trong SGK (ví dụ, hình ảnh, bài tập, từ khóa quan trọng).
   2. Tạo dữ liệu trò chơi dưới dạng JSON.
   ${config.activityType === 'practice' ? `\n  Yêu cầu về số lượng: Tạo chính xác ${config.questionCount} mục trong mảng "questions".` : ''}
 
