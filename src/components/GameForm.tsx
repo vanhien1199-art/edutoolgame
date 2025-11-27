@@ -1,13 +1,16 @@
 import React, { useEffect } from 'react';
 import { GameConfig, GameType } from '../types';
-import { BookOpen, Gamepad2, BrainCircuit, ListOrdered, Zap, Grid3X3, Package, Target, KeyRound, Lock, ShieldCheck } from 'lucide-react';
+import { 
+  BookOpen, Gamepad2, BrainCircuit, ListOrdered, Zap, 
+  Grid3X3, Package, Target, KeyRound, Lock, ShieldCheck 
+} from 'lucide-react';
 
 interface GameFormProps {
   config: GameConfig;
   onChange: (key: keyof GameConfig, value: string | number) => void;
   onSubmit: () => void;
   isLoading: boolean;
-  // --- Props mới cho License ---
+  // --- Props mới để xử lý License ---
   isVerified: boolean;
   onVerify: (e: React.FormEvent) => void;
   licenseInput: string;
@@ -21,7 +24,7 @@ const GameForm: React.FC<GameFormProps> = ({
   isVerified, onVerify, licenseInput, setLicenseInput, licenseError, verifying 
 }) => {
 
-  // Auto-set default game type when switching activity if current type is invalid
+  // Tự động chuyển loại game hợp lệ khi đổi chế độ (Warmup <-> Practice)
   useEffect(() => {
     if (config.activityType === 'warmup') {
       const validWarmups = ['simulation', 'fast_quiz', 'comparison', 'number_grid', 'keyword_guess', 'mystery_box'];
@@ -36,6 +39,7 @@ const GameForm: React.FC<GameFormProps> = ({
     }
   }, [config.activityType, onChange, config.gameType]);
 
+  // Danh sách game Luyện tập
   const practiceGames: {id: GameType, name: string, icon: React.ReactNode}[] = [
     { id: 'quiz', name: 'Trắc nghiệm', icon: <div className="text-2xl">❓</div> },
     { id: 'matching', name: 'Ghép đôi', icon: <div className="text-2xl">🧩</div> },
@@ -43,6 +47,7 @@ const GameForm: React.FC<GameFormProps> = ({
     { id: 'wheel', name: 'Vòng quay', icon: <div className="text-2xl">🎡</div> },
   ];
 
+  // Danh sách game Khởi động
   const warmupGames: {id: GameType, name: string, desc: string, icon: React.ReactNode}[] = [
     { id: 'fast_quiz', name: 'Kahoot / Quizizz', desc: 'Trắc nghiệm nhanh tranh điểm', icon: <Zap size={24} className="text-yellow-500"/> },
     { id: 'comparison', name: 'Điểm chung - Khác', desc: 'So sánh 2 khái niệm/hình ảnh', icon: <div className="text-2xl">⚖️</div> },
@@ -53,7 +58,8 @@ const GameForm: React.FC<GameFormProps> = ({
   ];
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-xl">
+    <div className="w-full max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-xl animate-fade-in-up">
+      {/* HEADER FORM */}
       <div className="text-center mb-8">
         <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
           <BookOpen className="w-8 h-8 text-blue-600" />
@@ -63,6 +69,7 @@ const GameForm: React.FC<GameFormProps> = ({
       </div>
 
       <div className="space-y-6">
+        {/* HÀNG 1: BỘ SÁCH & MÔN HỌC */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">Bộ Sách</label>
@@ -91,7 +98,6 @@ const GameForm: React.FC<GameFormProps> = ({
                 <option value="Ngữ văn">Ngữ văn (THCS/THPT)</option>
                 <option value="Tiếng Anh">Tiếng Anh</option>
               </optgroup>
-              
               <optgroup label="Khoa học & Xã hội">
                 <option value="Tự nhiên và Xã hội">Tự nhiên và Xã hội (Lớp 1-3)</option>
                 <option value="Khoa học">Khoa học (Lớp 4-5)</option>
@@ -103,14 +109,12 @@ const GameForm: React.FC<GameFormProps> = ({
                 <option value="Lịch sử">Lịch sử</option>
                 <option value="Địa lí">Địa lí</option>
               </optgroup>
-
               <optgroup label="Giáo dục công dân & Kỹ năng">
                 <option value="Đạo đức">Đạo đức (Tiểu học)</option>
                 <option value="Giáo dục công dân">Giáo dục công dân (THCS)</option>
                 <option value="Giáo dục Kinh tế và Pháp luật">GD Kinh tế & Pháp luật (THPT)</option>
                 <option value="Hoạt động trải nghiệm">Hoạt động trải nghiệm</option>
               </optgroup>
-
               <optgroup label="Công nghệ & Nghệ thuật">
                 <option value="Tin học">Tin học</option>
                 <option value="Công nghệ">Công nghệ</option>
@@ -123,6 +127,7 @@ const GameForm: React.FC<GameFormProps> = ({
           </div>
         </div>
 
+        {/* HÀNG 2: LỚP, HOẠT ĐỘNG, SỐ CÂU */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-1">
             <label className="block text-sm font-medium text-slate-700 mb-2">Lớp</label>
@@ -163,6 +168,7 @@ const GameForm: React.FC<GameFormProps> = ({
             </div>
         </div>
 
+        {/* HÀNG 3: TÊN BÀI HỌC */}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">Tên Bài Học</label>
           <input
@@ -174,6 +180,7 @@ const GameForm: React.FC<GameFormProps> = ({
           />
         </div>
 
+        {/* HÀNG 4: CHỌN GAME */}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">
             {config.activityType === 'warmup' ? 'Chọn Game Khởi Động' : 'Chọn Game Luyện Tập'}
@@ -223,19 +230,24 @@ const GameForm: React.FC<GameFormProps> = ({
 
         <hr className="my-6 border-slate-200"/>
 
-        {/* --- KHUNG KÍCH HOẠT LICENSE (NẰM TRÊN NÚT TẠO) --- */}
+        {/* --- KHUNG KÍCH HOẠT LICENSE (HIỂN THỊ NẾU CHƯA VERIFIED) --- */}
         {!isVerified && (
-          <div className="bg-slate-50 border border-slate-200 p-6 rounded-xl mb-4">
-             <div className="flex items-center gap-2 mb-4 text-slate-800 font-bold">
-                <Lock size={20} className="text-orange-500"/>
-                <h3>Yêu cầu kích hoạt</h3>
+          <div className="bg-slate-50 border-2 border-orange-100 p-6 rounded-xl mb-4 relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-4 opacity-5">
+                <Lock size={100} />
              </div>
-             <div className="flex flex-col md:flex-row gap-3">
+             <div className="flex items-center gap-2 mb-4 text-slate-800 font-bold relative z-10">
+                <div className="bg-orange-100 p-2 rounded-full">
+                   <Lock size={20} className="text-orange-500"/>
+                </div>
+                <h3>Yêu cầu kích hoạt bản quyền</h3>
+             </div>
+             <div className="flex flex-col md:flex-row gap-3 relative z-10">
                 <div className="relative flex-1">
                   <KeyRound className="absolute left-3 top-3 text-slate-400 w-5 h-5" />
                   <input 
                     type="text" 
-                    className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase font-mono"
+                    className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase font-mono shadow-sm"
                     placeholder="Nhập mã kích hoạt (VD: DEMO-2025)"
                     value={licenseInput}
                     onChange={(e) => setLicenseInput(e.target.value)}
@@ -244,38 +256,37 @@ const GameForm: React.FC<GameFormProps> = ({
                 <button 
                   onClick={(e) => { e.preventDefault(); onVerify(e); }}
                   disabled={verifying || !licenseInput}
-                  className="px-6 py-3 bg-slate-800 text-white font-bold rounded-lg hover:bg-slate-900 transition whitespace-nowrap disabled:opacity-50"
+                  className="px-6 py-3 bg-slate-800 text-white font-bold rounded-lg hover:bg-slate-900 transition whitespace-nowrap disabled:opacity-50 shadow-md flex items-center gap-2"
                 >
-                  {verifying ? 'Đang kiểm tra...' : 'Kích Hoạt'}
+                  {verifying ? 'Đang kiểm tra...' : 'Kích Hoạt'} <ShieldCheck size={18}/>
                 </button>
              </div>
-             {licenseError && <p className="text-red-500 text-sm mt-2 font-medium">⚠️ {licenseError}</p>}
-             <p className="text-xs text-slate-400 mt-2">Bạn cần nhập mã kích hoạt để mở khóa nút tạo game.</p>
+             {licenseError && <p className="text-red-500 text-sm mt-2 font-medium flex items-center gap-1">⚠️ {licenseError}</p>}
+             <p className="text-xs text-slate-500 mt-3 italic">
+               * Bạn cần nhập mã kích hoạt để mở khóa nút tạo trò chơi bên dưới.
+             </p>
           </div>
         )}
 
-        {/* --- NÚT TẠO GAME (THAY ĐỔI TRẠNG THÁI DỰA TRÊN LICENSE) --- */}
+        {/* --- NÚT TẠO GAME --- */}
         <button
           onClick={onSubmit}
           disabled={!isVerified || !config.lessonName || isLoading}
-          className={`w-full py-4 rounded-xl font-bold text-white text-lg flex items-center justify-center gap-2 transition-all ${
+          className={`w-full py-4 rounded-xl font-bold text-white text-lg flex items-center justify-center gap-2 transition-all shadow-lg ${
             !isVerified || !config.lessonName || isLoading
-              ? 'bg-slate-300 cursor-not-allowed'
-              : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg transform hover:-translate-y-0.5'
+              ? 'bg-slate-300 cursor-not-allowed shadow-none'
+              : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-xl transform hover:-translate-y-0.5'
           }`}
         >
           {isLoading ? (
             <>
-              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              AI đang nghiên cứu bài học...
+              <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+              AI đang nghiên cứu...
             </>
           ) : (
             <>
               {isVerified ? <Gamepad2 className="w-6 h-6" /> : <Lock className="w-6 h-6" />}
-              {isVerified ? 'Tạo Trò Chơi' : 'Vui Lòng Kích Hoạt Để Tạo Game'}
+              {isVerified ? 'Tạo Trò Chơi Ngay' : 'Vui Lòng Kích Hoạt Để Tạo Game'}
             </>
           )}
         </button>
