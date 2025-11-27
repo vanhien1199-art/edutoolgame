@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react';
 import { GameConfig, GameType } from '../types';
-import { BookOpen, Gamepad2, BrainCircuit, ListOrdered, KeyRound, ShieldCheck, Lock } from 'lucide-react';
+import { BookOpen, Gamepad2, BrainCircuit, ListOrdered, Zap, Grid3X3, Package, Target, KeyRound, Lock, ShieldCheck } from 'lucide-react';
 
 interface GameFormProps {
   config: GameConfig;
   onChange: (key: keyof GameConfig, value: string | number) => void;
   onSubmit: () => void;
   isLoading: boolean;
-  // Các props mới cho License
+  // --- Props mới cho License ---
   isVerified: boolean;
   onVerify: (e: React.FormEvent) => void;
   licenseInput: string;
@@ -18,15 +18,21 @@ interface GameFormProps {
 
 const GameForm: React.FC<GameFormProps> = ({ 
   config, onChange, onSubmit, isLoading,
-  isVerified, onVerify, licenseInput, setLicenseInput, licenseError, verifying
+  isVerified, onVerify, licenseInput, setLicenseInput, licenseError, verifying 
 }) => {
 
-  // Logic chọn loại game (giữ nguyên)
+  // Auto-set default game type when switching activity if current type is invalid
   useEffect(() => {
-    if (config.activityType === 'warmup' && config.gameType !== 'simulation') {
-      onChange('gameType', 'simulation');
-    } else if (config.activityType === 'practice' && config.gameType === 'simulation') {
-      onChange('gameType', 'quiz');
+    if (config.activityType === 'warmup') {
+      const validWarmups = ['simulation', 'fast_quiz', 'comparison', 'number_grid', 'keyword_guess', 'mystery_box'];
+      if (!validWarmups.includes(config.gameType)) {
+        onChange('gameType', 'fast_quiz');
+      }
+    } else if (config.activityType === 'practice') {
+      const validPractice = ['quiz', 'matching', 'sequencing', 'wheel'];
+      if (!validPractice.includes(config.gameType)) {
+        onChange('gameType', 'quiz');
+      }
     }
   }, [config.activityType, onChange, config.gameType]);
 
@@ -35,6 +41,15 @@ const GameForm: React.FC<GameFormProps> = ({
     { id: 'matching', name: 'Ghép đôi', icon: <div className="text-2xl">🧩</div> },
     { id: 'sequencing', name: 'Sắp xếp', icon: <ListOrdered size={24} /> },
     { id: 'wheel', name: 'Vòng quay', icon: <div className="text-2xl">🎡</div> },
+  ];
+
+  const warmupGames: {id: GameType, name: string, desc: string, icon: React.ReactNode}[] = [
+    { id: 'fast_quiz', name: 'Kahoot / Quizizz', desc: 'Trắc nghiệm nhanh tranh điểm', icon: <Zap size={24} className="text-yellow-500"/> },
+    { id: 'comparison', name: 'Điểm chung - Khác', desc: 'So sánh 2 khái niệm/hình ảnh', icon: <div className="text-2xl">⚖️</div> },
+    { id: 'number_grid', name: 'Chọn ô số', desc: '9 ô số bí mật gợi mở bài học', icon: <Grid3X3 size={24} className="text-blue-500"/> },
+    { id: 'keyword_guess', name: 'Bắn tên (3 từ khóa)', desc: 'Đoán nội dung từ các từ khóa', icon: <Target size={24} className="text-red-500"/> },
+    { id: 'mystery_box', name: 'Hộp bí mật', desc: 'Đoán vật trong hộp qua dữ kiện', icon: <Package size={24} className="text-purple-500"/> },
+    { id: 'simulation', name: 'Mô phỏng tương tác', desc: 'Kéo thả, thao tác vật thể', icon: <BrainCircuit size={24} className="text-green-500"/> },
   ];
 
   return (
@@ -48,34 +63,62 @@ const GameForm: React.FC<GameFormProps> = ({
       </div>
 
       <div className="space-y-6">
-        {/* --- CÁC Ô NHẬP LIỆU (Giữ nguyên) --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">Bộ Sách</label>
             <select
-              className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
               value={config.bookSeries}
               onChange={(e) => onChange('bookSeries', e.target.value)}
             >
               <option value="Kết nối tri thức với cuộc sống">Kết nối tri thức</option>
               <option value="Cánh Diều">Cánh Diều</option>
               <option value="Chân trời sáng tạo">Chân trời sáng tạo</option>
+              <option value="Cùng học để phát triển năng lực">Cùng học phát triển năng lực</option>
             </select>
           </div>
+
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">Môn Học</label>
             <select
-              className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
               value={config.subject}
               onChange={(e) => onChange('subject', e.target.value)}
             >
-               <option value="Toán học">Toán học</option>
-               <option value="Tiếng Việt">Tiếng Việt</option>
-               <option value="Tiếng Anh">Tiếng Anh</option>
-               <option value="Khoa học tự nhiên">Khoa học tự nhiên</option>
-               <option value="Lịch sử và Địa lí">Lịch sử và Địa lí</option>
-               <option value="Tin học">Tin học</option>
-               <option value="Công nghệ">Công nghệ</option>
+              <optgroup label="Môn Chính">
+                <option value="Toán học">Toán học</option>
+                <option value="Tiếng Việt">Tiếng Việt (Tiểu học)</option>
+                <option value="Ngữ văn">Ngữ văn (THCS/THPT)</option>
+                <option value="Tiếng Anh">Tiếng Anh</option>
+              </optgroup>
+              
+              <optgroup label="Khoa học & Xã hội">
+                <option value="Tự nhiên và Xã hội">Tự nhiên và Xã hội (Lớp 1-3)</option>
+                <option value="Khoa học">Khoa học (Lớp 4-5)</option>
+                <option value="Khoa học tự nhiên">Khoa học tự nhiên (Lý-Hóa-Sinh)</option>
+                <option value="Vật lí">Vật lí</option>
+                <option value="Hóa học">Hóa học</option>
+                <option value="Sinh học">Sinh học</option>
+                <option value="Lịch sử và Địa lí">Lịch sử và Địa lí</option>
+                <option value="Lịch sử">Lịch sử</option>
+                <option value="Địa lí">Địa lí</option>
+              </optgroup>
+
+              <optgroup label="Giáo dục công dân & Kỹ năng">
+                <option value="Đạo đức">Đạo đức (Tiểu học)</option>
+                <option value="Giáo dục công dân">Giáo dục công dân (THCS)</option>
+                <option value="Giáo dục Kinh tế và Pháp luật">GD Kinh tế & Pháp luật (THPT)</option>
+                <option value="Hoạt động trải nghiệm">Hoạt động trải nghiệm</option>
+              </optgroup>
+
+              <optgroup label="Công nghệ & Nghệ thuật">
+                <option value="Tin học">Tin học</option>
+                <option value="Công nghệ">Công nghệ</option>
+                <option value="Âm nhạc">Âm nhạc</option>
+                <option value="Mĩ thuật">Mĩ thuật</option>
+                <option value="Giáo dục thể chất">Giáo dục thể chất</option>
+                <option value="Giáo dục Quốc phòng và An ninh">GD Quốc phòng & An ninh</option>
+              </optgroup>
             </select>
           </div>
         </div>
@@ -84,7 +127,7 @@ const GameForm: React.FC<GameFormProps> = ({
           <div className="md:col-span-1">
             <label className="block text-sm font-medium text-slate-700 mb-2">Lớp</label>
             <select
-              className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
               value={config.grade}
               onChange={(e) => onChange('grade', e.target.value)}
             >
@@ -96,18 +139,18 @@ const GameForm: React.FC<GameFormProps> = ({
            <div className="md:col-span-1">
             <label className="block text-sm font-medium text-slate-700 mb-2">Hoạt Động</label>
             <select
-              className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
               value={config.activityType}
               onChange={(e) => onChange('activityType', e.target.value as any)}
             >
-              <option value="warmup">Khởi động</option>
-              <option value="practice">Luyện tập</option>
+              <option value="warmup">Khởi động (Warm-up)</option>
+              <option value="practice">Luyện tập (Practice)</option>
             </select>
           </div>
-           <div className={`md:col-span-1 ${config.activityType === 'practice' ? '' : 'opacity-50 pointer-events-none'}`}>
+           <div className={`md:col-span-1 transition-opacity duration-300 ${config.activityType === 'practice' ? 'opacity-100' : 'opacity-20 pointer-events-none'}`}>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Số câu hỏi</label>
                 <select
-                    className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                     value={config.questionCount}
                     onChange={(e) => onChange('questionCount', parseInt(e.target.value, 10))}
                     disabled={config.activityType !== 'practice'}
@@ -124,23 +167,39 @@ const GameForm: React.FC<GameFormProps> = ({
           <label className="block text-sm font-medium text-slate-700 mb-2">Tên Bài Học</label>
           <input
             type="text"
-            className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-            placeholder="Ví dụ: Phân số, ..."
+            className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+            placeholder="Ví dụ: Phân số, Lực đẩy Archimedes, ..."
             value={config.lessonName}
             onChange={(e) => onChange('lessonName', e.target.value)}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Loại Trò Chơi</label>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            {config.activityType === 'warmup' ? 'Chọn Game Khởi Động' : 'Chọn Game Luyện Tập'}
+          </label>
+          
           {config.activityType === 'warmup' ? (
-            <div className="border-2 border-blue-500 bg-blue-50 p-4 rounded-xl flex items-center gap-4 text-blue-700">
-               <BrainCircuit size={32} />
-               <div>
-                 <h4 className="font-bold">Mô Phỏng Tương Tác</h4>
-                 <p className="text-sm">Học sinh thao tác trực tiếp để khám phá bài học.</p>
-               </div>
-            </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+               {warmupGames.map((type) => (
+                  <button
+                    key={type.id}
+                    type="button"
+                    className={`flex items-start gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                      config.gameType === type.id
+                        ? 'border-blue-500 bg-blue-50 text-blue-800'
+                        : 'border-slate-200 hover:border-slate-300 text-slate-600'
+                    }`}
+                    onClick={() => onChange('gameType', type.id)}
+                  >
+                    <div className="mt-1 flex-shrink-0">{type.icon}</div>
+                    <div>
+                      <div className="font-bold">{type.name}</div>
+                      <div className="text-xs opacity-75">{type.desc}</div>
+                    </div>
+                  </button>
+               ))}
+             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {practiceGames.map((type) => (
@@ -195,7 +254,7 @@ const GameForm: React.FC<GameFormProps> = ({
           </div>
         )}
 
-        {/* --- NÚT TẠO GAME --- */}
+        {/* --- NÚT TẠO GAME (THAY ĐỔI TRẠNG THÁI DỰA TRÊN LICENSE) --- */}
         <button
           onClick={onSubmit}
           disabled={!isVerified || !config.lessonName || isLoading}
@@ -207,13 +266,16 @@ const GameForm: React.FC<GameFormProps> = ({
         >
           {isLoading ? (
             <>
-              <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-              AI đang nghiên cứu...
+              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              AI đang nghiên cứu bài học...
             </>
           ) : (
             <>
               {isVerified ? <Gamepad2 className="w-6 h-6" /> : <Lock className="w-6 h-6" />}
-              {isVerified ? 'Tạo Trò Chơi Ngay' : 'Vui Lòng Kích Hoạt Để Tạo Game'}
+              {isVerified ? 'Tạo Trò Chơi' : 'Vui Lòng Kích Hoạt Để Tạo Game'}
             </>
           )}
         </button>
