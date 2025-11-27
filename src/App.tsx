@@ -71,19 +71,35 @@ const App: React.FC = () => {
     }
   };
 
-  const handleGenerate = async () => {
+  // Trong src/App.tsx
+
+const handleGenerate = async () => {
     if (!config.lessonName) return;
+
+    // Bắt buộc phải có mã mới cho tạo
+    if (!licenseInput) {
+        alert("Vui lòng nhập mã kích hoạt!");
+        return;
+    }
+
     setLoading(true);
     try {
-      const data = await generateGameContent(config);
+      // Truyền licenseInput vào hàm generate
+      const data = await generateGameContent(config, licenseInput);
+      
       setContent(data);
       setStep('review');
+      
+      // Nếu không phải demo thì thông báo trừ tiền
+      if (licenseInput !== 'DEMO-2025') {
+          alert("Tạo thành công! (Tài khoản đã bị trừ 1 lượt)");
+      }
     } catch (error) {
       alert((error as Error).message);
     } finally {
       setLoading(false);
     }
-  };
+};
 
   const handleDownload = () => {
     if (!content) return;
