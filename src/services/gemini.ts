@@ -1,22 +1,17 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GameConfig, GeneratedContent } from "../types";
-
 // Sử dụng biến môi trường chuẩn Vite
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-
 if (!apiKey) {
   console.error("VITE_GEMINI_API_KEY is missing");
 }
-
 const genAI = new GoogleGenerativeAI(apiKey || "MISSING_KEY");
-
 export const generateGameContent = async (config: GameConfig): Promise<GeneratedContent> => {
   // Logic giữ nguyên, chỉ thay đổi cách gọi model
   const modelId = "gemini-2.5-flash"; 
   const model = genAI.getGenerativeModel({ model: modelId });
-
   const prompt = `
-  Bạn là một chuyên gia giáo dục Việt Nam, am hiểu chương trình GDPT 2018 và nội dung SGK ${config.bookSeries} tại nguồn trang: https://hanhtrangso.nxbgd.vn/.
+  Sửa lại promt sau: ( Bạn là một chuyên gia giáo dục Việt Nam, am hiểu chương trình GDPT 2018 và nội dung SGK ${config.bookSeries} tại nguồn trang: https://hanhtrangso.nxbgd.vn/.
   Nhiệm vụ: Tạo nội dung trò chơi giáo dục cho bài học:
   - Môn: ${config.subject}
   - Lớp: ${config.grade}
@@ -24,20 +19,16 @@ export const generateGameContent = async (config: GameConfig): Promise<Generated
   - Hoạt động: ${config.activityType}
   - Loại game: ${config.gameType}
   ${config.activityType === 'practice' ? `- Số lượng câu hỏi: ${config.questionCount}` : ''}
-
   1. Hãy TÌM KIẾM (dùng công cụ) tình huống mở đầu hoặc nội dung liên quan của bài học này trong SGK (ví dụ, hình ảnh, bài tập, từ khóa quan trọng).
   2. Tạo dữ liệu trò chơi dưới dạng JSON.
-  ${config.activityType === 'practice' ? `\n  Yêu cầu về số lượng: Tạo chính xác ${config.questionCount} mục trong mảng "questions".` : ''}
-
+  ${config.activityType === 'practice' ? `\n Yêu cầu về số lượng: Tạo chính xác ${config.questionCount} mục trong mảng "questions".` : ''}
   CẤU TRÚC JSON TRẢ VỀ:
   {
     "title": "Tên trò chơi (Hấp dẫn, liên quan bài học)",
     "description": "Hướng dẫn cách chơi ngắn gọn",
     "questions": [ ... danh sách câu hỏi/dữ liệu ...]
   }
-
   CHI TIẾT CẤU TRÚC "questions" THEO TỪNG LOẠI GAME:
-
   *** LOẠI: fast_quiz (Kahoot/Quizizz) ***
   Tạo các câu hỏi trắc nghiệm NHANH, ngắn gọn, kích thích tư duy.
   {
@@ -47,7 +38,6 @@ export const generateGameContent = async (config: GameConfig): Promise<Generated
     "correctAnswer": "Đáp án đúng",
     "explanation": "Giải thích siêu ngắn"
   }
-
   *** LOẠI: comparison (Tìm điểm chung/khác) ***
   So sánh 2 đối tượng/khái niệm trong bài học. Chỉ trả về 1 item duy nhất cấu hình game.
   {
@@ -64,7 +54,6 @@ export const generateGameContent = async (config: GameConfig): Promise<Generated
        ]
     }
   }
-
   *** LOẠI: number_grid (Chọn ô số) ***
   Tạo chính xác 9 câu hỏi cho 9 ô số.
   {
@@ -74,7 +63,6 @@ export const generateGameContent = async (config: GameConfig): Promise<Generated
     "correctAnswer": "Đáp án đúng",
     "explanation": "Giải thích"
   }
-
   *** LOẠI: keyword_guess (Bắn tên/Đoán từ khóa) ***
   Chỉ trả về 1 item duy nhất.
   {
@@ -85,7 +73,6 @@ export const generateGameContent = async (config: GameConfig): Promise<Generated
        "finalAnswer": "Tên chủ đề/bài học cần đoán"
     }
   }
-
   *** LOẠI: mystery_box (Hộp bí mật) ***
   Chỉ trả về 1 item duy nhất.
   {
@@ -100,7 +87,6 @@ export const generateGameContent = async (config: GameConfig): Promise<Generated
        "itemContent": "Tên vật/khái niệm trong hộp"
     }
   }
-
   *** LOẠI: simulation (Mô phỏng tương tác) ***
   Chỉ trả về 1 phần tử cấu hình toàn bộ màn chơi Kéo-Thả.
   {
@@ -118,25 +104,62 @@ export const generateGameContent = async (config: GameConfig): Promise<Generated
        ]
     }
   }
-
   *** LOẠI: sequencing (Sắp xếp thứ tự) ***
   {
     "id": "seq1",
     "question": "Sắp xếp theo thứ tự...",
     "sequenceOrder": 1, // 1, 2, 3...
-    "content": "Nội dung bước" 
+    "content": "Nội dung bước"
   }
-
   *** LOẠI: quiz (Trắc nghiệm thường) ***
   { "id": "q1", "question": "...", "options": ["..."], "correctAnswer": "...", "explanation": "..." }
-
   *** LOẠI: matching (Ghép đôi) ***
   { "id": "m1", "question": "...", "matchPair": { "left": "...", "right": "..." } }
-
   *** LOẠI: wheel (Vòng quay) ***
   { "id": "w1", "question": "...", "wheelLabel": "...", "correctAnswer": "...", "explanation": "..." }
-
-  YÊU CẦU: JSON thuần, không markdown, nội dung chính xác SGK.
+  YÊU CẦU: JSON thuần, không markdown, nội dung chính xác SGK.) để AI trả về đúng theo yêu cầu "Trò chơi tình huống khởi động bài học mới là các hoạt động ngắn (3–7 phút) được thiết kế theo tình huống thực tế, giúp học sinh:
+* Khởi động não bộ trước khi vào bài mới
+* Tạo hứng thú và thu hút sự chú ý
+* Kích hoạt kiến thức nền có liên quan đến nội dung học
+* Tạo môi trường học tập tích cực, tương tác ngay từ đầu tiết học
+✅ Đặc điểm của trò chơi tình huống
+* Có một tình huống thực tế gần gũi, liên quan trực tiếp đến bài học.
+* Học sinh phải suy nghĩ – thảo luận – đưa ra lựa chọn.
+* Không cần chuẩn bị phức tạp.
+* Thời lượng ngắn nhưng tạo hiệu ứng “đặt vấn đề” rất tốt.
+* Giúp giáo viên dẫn vào bài tự nhiên, mạch lạc.
+✅ Ví dụ trò chơi tình huống theo từng môn
+1. Môn Toán
+Tên trò chơi: "Cứu trợ toán học"\
+Tình huống: Một chiếc máy bay cần tính lượng nhiên liệu phù hợp theo công thức (liên quan đến bài học).\
+Nhiệm vụ: HS chọn đáp án đúng → GV kết nối vào bài học.
+2. Môn Tin học
+Tên: "Máy tính bị lỗi!"\
+Tình huống: Một máy tính không khởi động được vì sai cấu hình mạng hoặc file bị hỏng.\
+Nhiệm vụ: HS chọn cách xử lý → GV dẫn vào bài mới (VD: Mạng máy tính, hệ điều hành, thuật toán…).
+3. Môn Ngữ văn
+Tên: "Ai là nhân vật?"\
+Tình huống: GV mô tả một hoàn cảnh liên quan đến tác phẩm mới.\
+Nhiệm vụ: HS đoán nhân vật hoặc nội dung → vào bài.
+4. Môn Lịch sử
+Tên: "Bạn sẽ làm gì nếu là họ?"\
+Tình huống: Đưa ra bối cảnh lịch sử (VD: trước Cách mạng tháng 8, trước sự kiện Điện Biên Phủ).\
+HS: đưa lựa chọn\
+GV: kết nối vào bài để tìm hiểu nguyên nhân, diễn biến.
+5. Môn Khoa học / Vật lý
+Tên: "Lựa chọn an toàn"\
+Tình huống: Một bạn dùng thiết bị điện bị chập.\
+Nhiệm vụ: Em sẽ xử lý thế nào?\
+→ Dẫn vào bài về dòng điện, an toàn điện, công suất…
+✅ Các dạng trò chơi tình huống phổ biến
+1. Tình huống lựa chọn (A/B/C)
+Ngắn – nhanh – phù hợp mọi môn.
+2. Tình huống đóng vai
+Một nhóm đóng vai xử lý tình huống → dẫn vào bài.
+3. Tình huống quan sát hình ảnh/video
+Xem hình → đặt câu hỏi → vào bài mới.
+4. Tình huống giải cứu / thử thách
+Tạo áp lực nhẹ: "Cần giúp nhân vật vượt qua thử thách". 
   `;
 
   try {
