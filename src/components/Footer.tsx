@@ -14,7 +14,7 @@ const Footer: React.FC = () => {
             Công cụ hỗ trợ giáo viên soạn bài giảng tương tác thông minh, tiết kiệm thời gian và nâng cao hiệu quả lớp học.
           </p>
           <p className="text-xs text-slate-500 mt-4">
-            © {new Date().getFullYear()} Bản quyền thuộc về Vanhien1199-Art.
+            © {new Date().getFullYear()} Bản quyền thuộc về Genedu.
           </p>
         </div>
 
@@ -27,27 +27,52 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Cột 3: Liên hệ */}
-        <div className="flex flex-col items-center md:items-end">
-          <h3 className="text-white font-bold text-lg mb-2">Liên Hệ</h3>
-          <div className="flex gap-4 mt-2">
-            <a href="https://facebook.com" target="_blank" rel="noreferrer" className="bg-blue-600 p-2 rounded-full hover:bg-blue-700 transition text-white" title="Facebook">
+        <div>
+          <h3 className="text-white font-bold text-lg mb-4">Hỗ Trợ Trực Tuyến</h3>
+          <div className="flex flex-col gap-4">
+            
+            {/* Nút Chat Facebook */}
+            <a 
+              href="https://facebook.com/nung.hien" // <-- Thay link Fanpage của bạn vào đây
+              target="_blank" 
+              rel="noreferrer"
+              className="group flex items-center gap-3 bg-[#1877F2] hover:bg-[#166fe5] text-white px-4 py-2 rounded-lg transition w-fit"
+            >
               <Facebook size={20} />
+              <span className="font-medium text-sm">Chat Facebook</span>
             </a>
-            <a href="https://zalo.me" target="_blank" rel="noreferrer" className="bg-blue-500 p-2 rounded-full hover:bg-blue-600 transition text-white" title="Zalo">
-              <MessageCircle size={20} />
-            </a>
-            <a href="mailto:contact@example.com" className="bg-red-500 p-2 rounded-full hover:bg-red-600 transition text-white" title="Email">
-              <Mail size={20} />
-            </a>
-             <a href="https://yourwebsite.com" className="bg-emerald-500 p-2 rounded-full hover:bg-emerald-600 transition text-white" title="Website">
-              <Globe size={20} />
-            </a>
+
+            {/* Khu vực Zalo QR */}
+            <div className="flex flex-col gap-2">
+                <span className="text-xs text-slate-400 uppercase font-bold tracking-wide">Quét mã Zalo</span>
+                <div className="bg-white p-2 rounded-lg w-fit shadow-lg shadow-blue-900/20">
+                    {/* Mã QR được tạo tự động. Thay 'https://zalo.me/' vào param data */}
+                    <img 
+                        src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https://zalo.me/84914329178" 
+                        alt="Zalo QR Code" 
+                        className="w-24 h-24"
+                    />
+                </div>
+                <a 
+                  href="https://zalo.me/84914329178" // <-- Thay link Zalo cá nhân/OA của bạn vào đây
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1 transition"
+                >
+                   <MessageCircle size={16}/> Kết nối Zalo
+                </a>
+            </div>
+
           </div>
-          <p className="text-sm mt-3">Hotline: 09xx.xxx.xxx</p>
         </div>
+      </div>
+      
+      <div className="max-w-6xl mx-auto px-4 mt-12 pt-8 border-t border-slate-800 text-center text-xs text-slate-500">
+        <p>© {new Date().getFullYear()} GenEdu AI. All rights reserved. Developed by Vanhien1199-Art.</p>
       </div>
     </footer>
   );
 };
+
 
 export default Footer;
