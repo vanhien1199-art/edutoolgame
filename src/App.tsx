@@ -125,7 +125,7 @@ const App: React.FC = () => {
               <div className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white p-2 rounded-lg">
                 <BrainCircuit size={24} />
               </div>
-              <span className="text-xl font-extrabold text-slate-800 tracking-tight hidden md:block">EduGame<span className="text-blue-600">AI</span></span>
+              <span className="text-xl font-extrabold text-slate-800 tracking-tight hidden md:block">GenEdu<span className="text-blue-600"></span></span>
            </div>
 
            <div className="flex items-center gap-4">
