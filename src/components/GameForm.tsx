@@ -263,7 +263,7 @@ const GameForm: React.FC<GameFormProps> = ({
              </div>
              {licenseError && <p className="text-red-500 text-sm mt-2 font-medium flex items-center gap-1">⚠️ {licenseError}</p>}
              <p className="text-xs text-slate-500 mt-3 italic">
-               * Bạn cần nhập mã kích hoạt để mở khóa nút tạo trò chơi bên dưới.
+               * Liên hệ Admin để nhận mã kích hoạt.
              </p>
           </div>
         )}
