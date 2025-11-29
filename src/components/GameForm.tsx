@@ -248,7 +248,7 @@ const GameForm: React.FC<GameFormProps> = ({
                   <input 
                     type="text" 
                     className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase font-mono shadow-sm"
-                    placeholder="Nhập mã kích hoạt (VD: DEMO-2025)"
+                    placeholder="Nhập mã kích hoạt"
                     value={licenseInput}
                     onChange={(e) => setLicenseInput(e.target.value)}
                   />
