@@ -9,7 +9,7 @@ const Footer: React.FC = () => {
         
         {/* Cột 1: Thông tin bản quyền */}
         <div>
-          <h3 className="text-white font-bold text-lg mb-2">EduGame AI Creator</h3>
+          <h3 className="text-white font-bold text-lg mb-2">GenEdu</h3>
           <p className="text-sm text-slate-400">
             Công cụ hỗ trợ giáo viên soạn bài giảng tương tác thông minh, tiết kiệm thời gian và nâng cao hiệu quả lớp học.
           </p>
@@ -76,3 +76,4 @@ const Footer: React.FC = () => {
 
 
 export default Footer;
+
