@@ -58,7 +58,7 @@ export async function onRequestPost(context) {
         
         const genAI = new GoogleGenerativeAI(env.GOOGLE_API_KEY);
         // Sử dụng 1.5-flash để đảm bảo ổn định (2.5 hiện chưa public API rộng rãi)
-        const modelId = "gemini-2.5-flash"; 
+        const modelId = "gemini-3-pro-preview"; 
         const model = genAI.getGenerativeModel({ model: modelId });
 
         // --- BẮT ĐẦU PROMPT (GIỮ NGUYÊN TUYỆT ĐỐI) ---
@@ -215,3 +215,4 @@ ${config.activityType === 'warmup' ? `
         return new Response(JSON.stringify({ error: "Lỗi xử lý: " + error.message }), { status: 500, headers: corsHeaders });
     }
 }
+
