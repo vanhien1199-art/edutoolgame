@@ -64,7 +64,7 @@ export async function onRequestPost(context) {
         // --- BẮT ĐẦU PROMPT (GIỮ NGUYÊN TUYỆT ĐỐI) ---
         const prompt = `
   Bạn là một chuyên gia giáo dục Việt Nam, am hiểu chương trình GDPT 2018 và nội dung SGK ${config.bookSeries}.
-Nhiệm vụ: Tạo nội dung trò chơi tình huống khởi động bài học mới cho bài học:
+Nhiệm vụ: Tạo nội dung trò chơi tình huống khởi động bài học mới cho bài học hoặc trò chơi luyện tập củng cố kiến thức:
 - Môn: ${config.subject}
 - Lớp: ${config.grade}
 - Bài: ${config.lessonName}
@@ -215,5 +215,6 @@ ${config.activityType === 'warmup' ? `
         return new Response(JSON.stringify({ error: "Lỗi xử lý: " + error.message }), { status: 500, headers: corsHeaders });
     }
 }
+
 
 
